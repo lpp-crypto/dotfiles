@@ -5,6 +5,53 @@
 
 
 * Installation
+The emacs version bundled with ubuntu is not compiled with flags that I need, meaning I need to install emacs from sources and compile it myself. No big deal, it is very straight forward---in fact, let's automatize it with a small script: [[./install.zsh]]. The rest of this section builds this script.
+
+First, we set the shebang and store the emacs version in an appropriate variable.
+
+#+BEGIN_SRC zsh :tangle test.zsh
+  #!/usr/bin/env zsh
+
+  VERSION=30.2
+#+END_SRC
+
+Then, we ensure that we have the emacs version we want. This done by testing the presence of the appropriate folder. If it is not found, then we download the correct archive from an emacs mirror, and uncompress it.
+
+#+BEGIN_SRC zsh :tangle test.zsh
+  if [[ ! -a ./emacs-$VERSION ]]; then
+      echo "directory not found, downloading"
+      wget https://ftp.snt.utwente.nl/pub/software/gnu/emacs/emacs-$VERSION.tar.xz
+      tar -xvf ./emacs-$VERSION.tar.xz
+  else
+      echo "no need to download"
+  fi
+#+END_SRC
+
+Finally, we compile it. the compilation flags are a combination of the suggestions from https://www.reddit.com/r/emacs/comments/mh5l9y/comment/gsz2ey3/ (for wayland support) and https://www.rahuljuliato.com/posts/compiling_emacs_30_1 (for general image support), as well as, crucially, the flag enabling =treesitter= and native compilation.
+
+I don't use treesitter yet but I want to have it as an option. I do rely heavily on the "native compilation" of emacs lisp for performances though.
+
+Compilation is then performed using =make=.
+
+#+BEGIN_SRC zsh :tangle test.zsh
+  cd emacs-$VERSION/
+  ./configure --with-native-compilation \
+                --with-tree-sitter \
+                --with-modules \
+                --with-threads \
+                --with-mailutils \
+                --with-gif \
+                --with-png \
+                --with-jpeg \
+                --with-rsvg \
+                --with-tiff \
+                --with-imagemagick \
+                --without-x \
+                --with-pgtk
+    make clean
+    make -j8
+#+END_SRC
+
 * Core setup
 ** Ensuring efficiency
 Following the advice of the [[https://github.com/jamescherti/compile-angel.el][compile-angel]] developer, I start with the following. It ensures that all packages are compiled "natively" (i.e. into machine language), and that the resulting programs are used.

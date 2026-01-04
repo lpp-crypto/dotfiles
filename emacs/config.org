@@ -4,20 +4,31 @@
 #+PROPERTY: header-args  :tangle ~/.emacs.el  :noweb yes
 
 
-* Installation
+* Installation :stable:
+** Main setup
 The emacs version bundled with ubuntu is not compiled with flags that I need, meaning I need to install emacs from sources and compile it myself. No big deal, it is very straight forward---in fact, let's automatize it with a small script: [[./install.zsh]]. The rest of this section builds this script.
 
 First, we set the shebang and store the emacs version in an appropriate variable.
 
-#+BEGIN_SRC zsh :tangle test.zsh
+#+BEGIN_SRC zsh :tangle install.zsh
   #!/usr/bin/env zsh
 
   VERSION=30.2
 #+END_SRC
 
+Then, we check for the presence of the emacs executable, and simply exit if it is found: we don't need to do anything.
+
+#+BEGIN_SRC zsh :tangle install.zsh
+  if [[ -a ./emacs-$VERSION/src/emacs ]]; then
+      echo "emacs-$VERSION is already present, no need to download/compile it"
+      return
+  fi
+#+END_SRC
+
+** Download (if necessary)
 Then, we ensure that we have the emacs version we want. This done by testing the presence of the appropriate folder. If it is not found, then we download the correct archive from an emacs mirror, and uncompress it.
 
-#+BEGIN_SRC zsh :tangle test.zsh
+#+BEGIN_SRC zsh :tangle install.zsh
   if [[ ! -a ./emacs-$VERSION ]]; then
       echo "directory not found, downloading"
       wget https://ftp.snt.utwente.nl/pub/software/gnu/emacs/emacs-$VERSION.tar.xz
@@ -26,14 +37,14 @@ Then, we ensure that we have the emacs version we want. This done by testing the
       echo "no need to download"
   fi
 #+END_SRC
-
+** Custom compilation
 Finally, we compile it. the compilation flags are a combination of the suggestions from https://www.reddit.com/r/emacs/comments/mh5l9y/comment/gsz2ey3/ (for wayland support) and https://www.rahuljuliato.com/posts/compiling_emacs_30_1 (for general image support), as well as, crucially, the flag enabling =treesitter= and native compilation.
 
 I don't use treesitter yet but I want to have it as an option. I do rely heavily on the "native compilation" of emacs lisp for performances though.
 
 Compilation is then performed using =make=.
 
-#+BEGIN_SRC zsh :tangle test.zsh
+#+BEGIN_SRC zsh :tangle install.zsh
   cd emacs-$VERSION/
   ./configure --with-native-compilation \
                 --with-tree-sitter \
@@ -53,10 +64,16 @@ Compilation is then performed using =make=.
 #+END_SRC
 
 * Core setup
-** Ensuring efficiency
+** Ensuring efficiency :stable:
 Following the advice of the [[https://github.com/jamescherti/compile-angel.el][compile-angel]] developer, I start with the following. It ensures that all packages are compiled "natively" (i.e. into machine language), and that the resulting programs are used.
 
+This step requires for emacs to be compiled by hand with the appropriate option, as is done in [[*Custom compilation]].
+
+The initial comment is needed to remove a compilation warning (see e.g. [[https://github.com/agda/agda/issues/7730][this discussion on github]]).
+
 #+BEGIN_SRC elisp
+    ;;; -*- lexical-binding: t; -*- 
+
   (use-package compile-angel
     :ensure t
 
@@ -82,11 +99,11 @@ Following the advice of the [[https://github.com/jamescherti/compile-angel.el][c
     (compile-angel-on-load-mode 1))
 
   ;; Ensure Emacs loads the most recent byte-compiled files.
-(setopt load-prefer-newer t)
+  (setopt load-prefer-newer t)
 
-;; Make Emacs Native-compile .elc files asynchronously by setting
-;; `native-comp-jit-compilation' to t.
-(setopt native-comp-jit-compilation t)
+  ;; Make Emacs Native-compile .elc files asynchronously by setting
+  ;; `native-comp-jit-compilation' to t.
+  (setopt native-comp-jit-compilation t)
 #+END_SRC
 ** Startup
 The inital-scratch-message is added by hand as it would just be added automatically otherwise. Miscellaneous appearance stuff follows:
@@ -95,17 +112,16 @@ The inital-scratch-message is added by hand as it would just be added automatica
 + initial buffer: https://emacs.stackexchange.com/questions/15081/programming-of-initial-buffer-choice
 + don't check for the "safety" of local variables
 
-The signature verification is disabled because of the OS on the
-desktop being too old.
+The signature verification is disabled because of the OS on the desktop being too old.
 #+BEGIN_SRC emacs-lisp 
-(setq initial-buffer-choice "~/org/todo.org"
-      inhibit-startup-screen t)
+  (setopt initial-buffer-choice "~/org/todo.org"
+          inhibit-startup-screen t)
 
-(menu-bar-mode -1) 
-(tool-bar-mode -1)
-(setq package-check-signature nil)
-(setq enable-local-variables :all)
-(require 'cl-lib)
+  (menu-bar-mode -1) 
+  (tool-bar-mode -1)
+  ;(setq package-check-signature nil)
+  (setq enable-local-variables :all)
+  (require 'cl-lib)
 #+END_SRC
 
 
@@ -235,7 +251,7 @@ Setup projectile
     (interactive)
     (if (boundp 'meuporg-project-name)
         (projectile-find-file)
-      (find-file)))
+      (call-interactively 'find-file)))
 
   (defun pi2-6-occur-in-project-or-folder()
     (interactive)
@@ -257,9 +273,10 @@ Setup projectile
     :config
     (projectile-mode)
     (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
-    (projectile-register-project-type 'meuporg-project '(".projectile")
-                                      :project-file ".projectile"
-                                      :compile "make")
+    (projectile-register-project-type
+     'meuporg-project '(".projectile")
+     :project-file ".projectile"
+     :compile "make")
     )
 
 #+END_SRC
@@ -343,15 +360,20 @@ The idea is to have mere annotations in files that are not intended to help with
 - ongoingWork :: I am currently working on it;
 - attentionNeeded :: I am not working on it at the moment but it will need to happen at some point;
 - stable :: I am happy with the current state of this heading, and am not plann ing to modify it.
+- hack :: If I am not planning to modify something *a priori*, but am not super happy with the solution I used.
 
 A permanent list of tags is specified first. It has to be set with =setopt=, otherwise it doesn't work.
 
 #+BEGIN_SRC elisp
-(setopt org-tag-persistent-alist
-       '(("ongoingWork" . ?o)
-         ("attentionNeeded" . ?n)
-         ("stable" . ?s)
-         ("hack" . ?h)))
+    (setopt org-tag-persistent-alist
+           '((:startgroup)
+             ("state")
+             (:grouptags)
+             ("ongoingWork" . ?o)
+             ("attentionNeeded" . ?n)
+             ("stable" . ?s)
+             ("hack" . ?h)
+             (:endgroup)))
 #+END_SRC
 
 Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It simply describes which face to use for each of these tags.
@@ -368,11 +390,12 @@ Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It si
 In order to allow the use off different colors in file vaults, it is possible to specify a local set of colors in the =dir-locals= file by creating a variable called =local-org-tag-faces=. Its content is added to the main =org-tag-faces= by the following snippet which was surprisingly hard to write. Indeed, =dir-locals= variables are only set *after* the major mode is setup. As a consequence, using its content requires the use of a later hook.
 
 #+BEGIN_SRC elisp
-(add-hook
- 'after-change-major-mode-hook
- (lambda ()
-   (if (and (boundp 'local-org-tag-faces))
-       (setopt org-tag-faces local-org-tag-faces))))
+  (add-hook
+   'after-change-major-mode-hook
+   (lambda ()
+     (if (boundp 'local-org-tag-faces)
+         (setopt org-tag-faces local-org-tag-faces)))
+   )
 #+END_SRC
 ** Attach enhancement
 #+BEGIN_SRC elisp
@@ -403,12 +426,20 @@ we evaluate a code block.
 (setq org-babel-python-command "python3"
       org-confirm-babel-evaluate nil)
 #+END_SRC
+*** Regenerate main configuration file
+Now that org-babel is setup, we can define the following function which tangles this file and then compiles the result. Useful when a change is made but we don't want to re-tangle all the files in this repository (meaning, running the [[../readme.org::*Updating configuration]] script).
+
+#+BEGIN_SRC emacs-lisp
+  (defun pi2-6/reset-config()
+    (interactive)
+    (with-current-buffer (find-file-noselect "~/dotfiles/emacs/config.org")
+      (org-babel-tangle))
+    (native-compile "~/.emacs.el"))
+#+END_SRC
 
 ** TODO Org-Agenda
 #+BEGIN_SRC emacs-lisp
-
-(setq org-agenda-files '("~/roam/projects/"))
-
+(setopt org-agenda-files '("~/roam/projects/"))
 #+END_SRC
 
 ** TODO Org Roam
@@ -433,9 +464,7 @@ we evaluate a code block.
   ;;        ("M-ç m" . pi2-6/open-meuporg-roam)
   ;;        )
   :config
-  (org-roam-setup))
-
-(org-roam-db-autosync-mode)
+  (org-roam-db-autosync-enable))
 #+END_SRC
 * LaTeX
 ** LSP
@@ -476,8 +505,8 @@ Documentation: https://github.com/minad/corfu
   :ensure t
   :custom
   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-  (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  (corfu-quit-at-boundary t)     ;; Always quit at completion boundary
+  (corfu-quit-no-match t)        ;; Quit when there is no match
   (corfu-preview-current nil)    ;; Disable current candidate preview
   (corfu-preselect 'prompt)      ;; Preselect the prompt
   (corfu-on-exact-match 'insert) ;; Configure handling of exact matches

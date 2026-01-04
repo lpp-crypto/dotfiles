@@ -20,27 +20,27 @@ Taking inspiration from the org documentation https://orgmode.org/manual/Batch-E
       (org-babel-tangle))))
 #+END_SRC
 ** Main update script
-The call to emacs in "batch" mode is adapted from the org documentation https://orgmode.org/manual/Batch-Execution.html
+The call to emacs in "batch" mode is adapted from the org documentation https://orgmode.org/manual/Batch-Execution.html. Yes, installing the custom, properly compiled emacs I use requires emacs to be installed so the org files can be tangled. This is not very elegant in terms of bootstrapping, but well.
 
 #+BEGIN_SRC sh ./update-config.sh
-#!/bin/zsh
+  #!/bin/zsh
 
-# we go ever all files in this folder (except setup.org)...
-for i in $(ls ./*.org | grep setup -v); do
-    # ... and we tangle them by starting a minimalistic emacs instance
-    echo "tangling ${i}"
-    emacs -Q --batch --eval "$(cat generate.el)" "${i}"
-done
+  # we go ever all files in this folder (except setup.org)...
+  for i in $(ls ./*.org | grep setup -v); do
+      # ... and we tangle them by starting a minimalistic emacs instance
+      echo "tangling ${i}"
+      emacs -Q --batch --eval "$(cat generate.el)" "${i}"
+  done
 
 
-# the .emacs file is compiled for a faster startup
-cd emacs
-emacs -Q --batch --eval "$(cat ../generate.el)" config.org
-cd ..
-emacs -Q --batch --eval "(byte-compile-file \"~/.emacs.el\")"
+  # handling emacs
+  cd emacs  
+  emacs -Q --batch --eval "$(cat ../generate.el)" config.org
+  zsh ./install.zsh
+  emacs -Q --batch --eval "(byte-compile-file \"~/.emacs.el\")"
 
-# finally, we restart sway
-swaymsg reload
+  # finally, we restart sway
+  swaymsg reload
 
 
 #+END_SRC

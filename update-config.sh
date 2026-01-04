@@ -11,9 +11,10 @@ done
 
 # the .emacs file is compiled for a faster startup
 cd emacs
+zsh ./install.zsh
 emacs -Q --batch --eval "$(cat ../generate.el)" config.org
 cd ..
-emacs -Q --batch --eval "(byte-compile-file \"~/.emacs.el\")"
+emacs -Q --batch --eval "(native-compile-file \"~/.emacs.el\")"
 
 # finally, we restart sway
 swaymsg reload

@@ -1,0 +1,25 @@
+#!/usr/bin/zsh
+
+
+COMMAND=$(echo "Lock\nExit\nSuspend\nReboot\nSwitch off" | rofi -dmenu -config ~/.config/rofi/rofi.rasi -i -p "What should I do?")
+case $COMMAND in
+"Lock")
+    swaylock --color 7f7965
+;;
+"Exit")
+    if [[ $(zsh ~/dotfiles/scripts/ensure "exiting") ]]; then swaymsg "exit" ; fi
+    
+;;
+"Suspend")
+    if [[ $(zsh ~/dotfiles/scripts/ensure "suspending") ]]; then systemctl suspend ; fi
+    
+;;
+"Reboot")
+    if [[ $(zsh ~/dotfiles/scripts/ensure "rebooting") ]]; then systemctl reboot ; fi
+    
+;;
+"Switch off")
+    if [[ $(zsh ~/dotfiles/scripts/ensure "shutting off") ]]; then systemctl poweroff ; fi
+    
+;;
+esac

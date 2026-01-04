@@ -1,0 +1,7 @@
+#!/usr/bin/sh
+
+RUNNING_SINK=$(pactl list sinks short | grep RUNNING | cut -f 1)
+pactl set-sink-volume $RUNNING_SINK $1
+CURRENT_VOLUME=$(pactl get-sink-volume $RUNNING_SINK | grep -v balance | cut -d '/' -f 2)
+echo $CURRENT_VOLUME
+notify-send "Sound: $CURRENT_VOLUME" -t 1000

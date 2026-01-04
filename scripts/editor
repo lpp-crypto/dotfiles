@@ -1,0 +1,9 @@
+#!/usr/bin/sh
+
+if [[ $(hostname) == "a-laptop" ]]; then
+    echo "laptop emacs"
+    emacs $@
+else
+    echo "desktop emacs"
+    ~/new-emacs/latest/install/bin/emacs-31.0.50 $@
+fi

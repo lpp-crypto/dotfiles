@@ -1,0 +1,46 @@
+#+TITLE: . FILES
+
+
+
+* TODO Philosophy
+* Updating configuration :attentionNeeded:
+** elisp script to tangle a file
+Taking inspiration from the org documentation https://orgmode.org/manual/Batch-Execution.html
+; is intended to be called within the [[*Main update script]].
+
+#+BEGIN_SRC elisp ./generate.el
+(progn
+  (require 'ob-tangle)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t) (shell . t))) ; <- add any other language here
+  (setq org-confirm-babel-evaluate nil python-indent-guess-indent-offset-verbose nil)
+  (dolist (file command-line-args-left)
+    (with-current-buffer (find-file-noselect file)
+      (org-babel-tangle))))
+#+END_SRC
+** Main update script
+The call to emacs in "batch" mode is adapted from the org documentation https://orgmode.org/manual/Batch-Execution.html
+
+#+BEGIN_SRC sh ./update-config.sh
+#!/bin/zsh
+
+# we go ever all files in this folder (except setup.org)...
+for i in $(ls ./*.org | grep setup -v); do
+    # ... and we tangle them by starting a minimalistic emacs instance
+    echo "tangling ${i}"
+    emacs -Q --batch --eval "$(cat generate.el)" "${i}"
+done
+
+
+# the .emacs file is compiled for a faster startup
+cd emacs
+emacs -Q --batch --eval "$(cat ../generate.el)" config.org
+cd ..
+emacs -Q --batch --eval "(byte-compile-file \"~/.emacs.el\")"
+
+# finally, we restart sway
+swaymsg reload
+
+
+#+END_SRC

@@ -1,0 +1,292 @@
+#+TITLE: Setting up SWAY
+#+setupfile: setup.org
+#+PROPERTY: header-args  :tangle ~/.config/sway/config :noweb yes
++PROPERTY: header-args  :tangle ./sway_config
+
+
+* Starting Applications :stable:
+** Handling XDG-related things
+Applications need to talk to each other, this is done using something called XDG. In order for it to work, this needs to be activated. We also need to activate a daemon that handles notifications, otherwise e.g. firefox will create a new window for each notification. The notification daemon used is "mako".
+
+In case of isses with starting =mako=, check [[https://github.com/emersion/mako/issues/257][this link]] (apparently it is something related to =apparmor=).
+
+We also add =~/.local/bin= to the global PATH.
+#+BEGIN_SRC sh
+exec_always source ~/.profile
+exec dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+exec_always mako
+
+#+END_SRC
+
+** Etabli prepare daemon
+#+BEGIN_SRC sh 
+exec_always <<setup.org:etabli_daemons()>> -p 
+#+END_SRC
+
+** Waybar
+The following simply starts =waybar= (see [[./waybar.org]] for its configuration).
+#+BEGIN_SRC sh 
+bar { 
+     swaybar_command waybar 
+}
+#+END_SRC
+
+I want clicking on the clock module to bring up a calendar above all windows, that will then be quickly closed. Thus, it should be floating. I have =gnome-calendar= installed, so might as well go with that. At this stage, we just make sure that the windows of this app are always floating by adding the following to the sway configuration.
+
+#+BEGIN_SRC sh
+for_window [app_id="gnome-calendar"] floating enable
+#+END_SRC
+
+
+** Networks
+The old reliable nm-applet plays well with waybar, so I just go with that.
+
+#+BEGIN_SRC sh
+exec_always nm-applet
+#+END_SRC
+
+* Input/output configurations
+** Input Configuration
+*** Keyboard
+A regular keyboard (in particular, a laptop keyboard) must be setup in azerty and =capslock= is set to be another =ctrl=. The specific layout is =fr(oss)= in order to have the "espace insécable fine" and upper-case accented letters in the correct position. Run =man xkeyboard-config= for a list of options.
+
+#+BEGIN_SRC sh
+input "1:1:AT_Translated_Set_2_keyboard" {
+    xkb_layout fr(oss)
+    xkb_options ctrl:nocaps
+}
+#+END_SRC
+
+When the voyager is plugged, we instead use qwerty since the logic of the layout is inside the keyboard itself.
+
+#+BEGIN_SRC sh
+input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
+    xkb_layout us
+}
+#+END_SRC
+
+*** Touchpad
+The touchpad must allow tap to click, scroll in the correct direction,
+and allow a tap with multiple fingers to correspond to a middle click.
+
+#+BEGIN_SRC sh
+input type:touchpad {
+    dwt enabled
+    tap enabled
+    natural_scroll enabled
+    middle_emulation enabled
+}
+#+END_SRC
+
+* Keyboard shortcuts
+** TODO Arrows
+*Add other shortcuts for small left/small right movement, etc, and have the logic to generate the shortcuts for the laptop or the keyboard*
+
+The basic configuration of the keyboard is as follows: the "mod" key is the "windows key", which happens to be called "Mod4". For the directions, I use the arrow-keys-like "i,j,k,l".
+#+BEGIN_SRC sh
+set $mod Mod4
+set $left j
+set $down k
+set $up i
+set $right l
+#+END_SRC
+** Window management
+*** Basics
+#+BEGIN_SRC sh
+bindsym $mod+Return exec <<setup.org:term()>>
+
+# Kill focused window
+bindsym $mod+Escape kill
+
+# Start your launcher
+bindsym $mod+a exec <<setup.org:drun()>>
+
+# Drag floating windows by holding down $mod and left mouse button.
+# Resize them with right mouse button + $mod.
+# Despite the name, also works for non-floating windows.
+# Change normal to inverse to use left mouse button for resizing and right
+# mouse button for dragging.
+floating_modifier $mod normal
+#+END_SRC
+*** Moving Around
+For the laptop keyboard:
+#+BEGIN_SRC sh
+# Move your focus around
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
+
+# Move the focused window with the same, but add Shiftbindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
+bindsym $mod+Shift+$left move left
+#+END_SRC
+
+In general
+#+BEGIN_SRC sh
+# Move your focus around
+bindsym $mod+left focus left
+bindsym $mod+down focus down
+bindsym $mod+up focus up
+bindsym $mod+right focus right
+
+# Move the focused window with the same, but add Shiftbindsym $mod+Shift+$left move left
+bindsym $mod+Shift+down move down
+bindsym $mod+Shift+up move up
+bindsym $mod+Shift+right move right
+bindsym $mod+Shift+left move left
+#+END_SRC
+
+** Session management
+The session management shortcuts all use mod+Shift in order for domain separation.
+
+*** Exiting
+#+BEGIN_SRC sh
+bindsym $mod+Shift+e exec zsh ~/dotfiles/scripts/leaving
+#+END_SRC
+*** Reloading the configuration
+  #+BEGIN_SRC sh
+  bindsym $mod+Shift+c reload
+  #+END_SRC
+
+*** Locking the screen
+  #+BEGIN_SRC sh
+  bindsym $mod+Shift+t exec swaylock --color 7f7965
+  #+END_SRC
+
+** Layout Management
+*** Resizing container
+Defining a sway mode to resize containers.
+
+#+NAME: sway-resize-interval
+#+BEGIN_SRC sh :noweb yes :tangle no
+15px
+#+END_SRC
+
+#+BEGIN_SRC sh RRRr
+mode "resize" {
+    # with custom arrows (laptop)
+    bindsym $left resize shrink width <<sway-resize-interval>>
+    bindsym $down resize grow height <<sway-resize-interval>>
+    bindsym $up resize shrink height <<sway-resize-interval>>
+    bindsym $right resize grow width <<sway-resize-interval>>
+
+    # with arrow keys (voyager)
+    bindsym Left resize shrink width <<sway-resize-interval>>
+    bindsym Down resize grow height <<sway-resize-interval>>
+    bindsym Up resize shrink height <<sway-resize-interval>>
+    bindsym Right resize grow width <<sway-resize-interval>>
+
+    # Return to default mode
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+#+END_SRC
+
+Adding the corresponding keyboard shortcut.
+#+BEGIN_SRC sh
+bindsym $mod+Shift+r mode "resize"
+#+END_SRC
+
+
+*** Layout stuff
+I don't care much for the stacked layout, so I simply need to toggle between split and tabbed. This [[https://www.reddit.com/r/swaywm/comments/16x1va7/toggle_between_tabbed_and_split/][reddit post]] explains how.
+
+To split between =splitv= and =splith=, I had to write a small script (see [[./scripts.org::*Layout switch script]]). 
+
+#+BEGIN_SRC sh 
+bindsym $mod+8 exec swaymsg layout toggle split tabbed
+#+END_SRC
+
+
+#+BEGIN_SRC sh
+bindsym $mod+9 exec python ~/dotfiles/scripts/split-layout.py
+
+# Make the current focus fullscreen
+bindsym $mod+0 fullscreen
+
+# Toggle the current focus between tiling and floating mode
+bindsym $mod+Shift+f floating toggle
+
+# Swap focus between the tiling area and the floating area
+bindsym $mod+Shift+space focus mode_toggle
+
+# Move focus to the parent container
+bindsym $mod+d focus parent
+#+END_SRC
+** Etabli
+*** Interacting with workspaces
+#+BEGIN_SRC sh 
+bindsym $mod+eacute exec <<setup.org:etabli()>> --next_level
+bindsym $mod+ampersand exec <<setup.org:etabli()>> --previous_level
+bindsym $mod+Tab exec <<setup.org:etabli()>> --next_workspace_in_level
+bindsym $mod+p exec <<setup.org:etabli()>> --new_workspace_in_level
+bindsym $mod+o exec <<setup.org:etabli()>> --next_workspace_in_level
+bindsym $mod+u exec <<setup.org:etabli()>> --previous_workspace_in_level
+#+END_SRC
+
+*** Interacting with workspaces and bringing current window
+#+BEGIN_SRC sh
+bindsym $mod+1 exec <<setup.org:etabli()>> --next_level_with_window
+bindsym $mod+2 exec <<setup.org:etabli()>> --previous_level_with_window
+bindsym $mod+Shift+o exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
+bindsym $mod+Shift+Tab exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
+bindsym $mod+Shift+u exec <<setup.org:etabli()>> --previous_workspace_in_level_with_window
+bindsym $mod+Shift+p exec <<setup.org:etabli()>> --new_workspace_in_level_with_window
+#+END_SRC
+
+*** Dmenu-based scripts
+#+BEGIN_SRC sh
+bindsym $mod+n exec <<setup.org:etabli_dmenu()>> --rename
+bindsym $mod+twosuperior exec <<setup.org:etabli_dmenu()>> --choose_workspace
+bindsym $mod+Shift+twosuperior exec <<setup.org:etabli_dmenu()>> --choose_workspace_with_window
+#+END_SRC
+** Special keys
+*** Sound control
+#+BEGIN_SRC sh
+bindsym XF86AudioMute exec pactl set-sink-mute $(pactl list sinks short | grep RUNNING | cut -f 1) toggle
+bindsym XF86AudioRaiseVolume exec sh ~/new-emacs/scripts/sound-change "+5%"
+bindsym XF86AudioLowerVolume exec sh ~/new-emacs/scripts/sound-change "-5%"
+#+END_SRC
+
+*** Light control
+Controlling the screen brightness using =brightnessctl=. This program needs root rights, but simply running =sudo chmod +s /usr/bin/brightnessctl= solves the problem.
+
+#+BEGIN_SRC sh :tangle ~/.config/sway/config :results output silent
+bindsym XF86MonBrightnessUp exec brightnessctl set 3%+
+bindsym XF86MonBrightnessDown exec brightnessctl set 3%-
+#+END_SRC
+* Appearance
+** The SWAY Theme :attentionNeeded:
+The following sets the wallpaper and the gap between the windows. The
+wallpaper scaling style must be set; =strech= works with wallpapers that
+are too small for the screen.
+#+BEGIN_SRC sh 
+output * bg ~/dotfiles/figures/rivendell.jpg stretch
+gaps inner 6
+#+END_SRC
+
+
+#+BEGIN_SRC sh
+font pango:Iosevka SS01 12
+
+# border without title bar
+default_border pixel 4
+client.focused <<setup.org:focus-color()>> <<setup.org:focus-color()>> #ffffff #c7bfa4 <<setup.org:focus-color()>>
+client.unfocused #827c67 #c7bfa4 #333333 #827c67 #827c67
+
+
+# gtk
+set $gnome-schema org.gnome.desktop.interface
+
+#+END_SRC
+
+
+
+exec_always {
+  gsettings set $gnome-schema gtk-theme <<gtk-theme>>
+  gsettings set $gnome-schema icon-theme <<icon-theme>>
+  gsettings set $gnome-schema cursor-theme <<cursor-theme>>
+}

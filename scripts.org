@@ -1,0 +1,133 @@
+#+TITLE: Scripts
+#+setupfile: setup.org
+
+* Session management
+** Asking for confirmation
+The following script uses the =dmenu-replacement= to ask for the confirmation of something. It is intended for use within...
+
+#+BEGIN_SRC zsh :tangle ~/dotfiles/scripts/ensure :noweb yes
+#!/usr/bin/zsh
+COMMAND=$(echo "Yes\nNo" | <<setup.org:dmenu()>> "Are you sure about $1?")
+if [[ $COMMAND == "Yes" ]]; then
+    echo "Yes"
+else
+    echo ""
+fi
+#+END_SRC
+
+... the following macro that wraps a =zsh= command in such a way that it is only run we said "yes" in the confirmation step.
+
+#+NAME: if-confirm
+#+BEGIN_SRC python :noweb yes :var cmd="" txt="that" :results output
+print('if [[ $(zsh ~/dotfiles/scripts/ensure "{}") ]]; then {} ; fi'.format(txt, cmd))
+#+END_SRC
+
+** Exit/shutdown
+
+#+BEGIN_SRC zsh :tangle ~/dotfiles/scripts/leaving :noweb yes
+#!/usr/bin/zsh
+
+
+COMMAND=$(echo "Lock\nExit\nSuspend\nReboot\nSwitch off" | <<setup.org:dmenu()>> "What should I do?")
+case $COMMAND in
+"Lock")
+    swaylock --color 7f7965
+;;
+"Exit")
+    <<if-confirm(cmd="swaymsg \"exit\"", txt="exiting")>>
+;;
+"Suspend")
+    <<if-confirm(cmd="systemctl suspend", txt="suspending")>>
+;;
+"Reboot")
+    <<if-confirm(cmd="systemctl reboot", txt="rebooting")>>
+;;
+"Switch off")
+    <<if-confirm(cmd="systemctl poweroff", txt="shutting off")>>
+;;
+esac
+
+#+END_SRC
+
+* Sound
+It is possible to control the sound using the keyboard buttons using
+the following snippet, along with the =pactl= utility.
+
+Source: [[https://www.reddit.com/r/swaywm/comments/qei3oh/how_can_i_set_up_keybindgs_with_sway_for_volume/][reddit]]
+
+The problem with this approach is that the =DEFAULT_SINK= might or might not be the "sink" (output device) currently being used. As a consequence, we need to grab the index of the device currently "running". This is easily achieved with some =sh= wizardry.
+
+A downside of this approach is that there is no feedback when pressing the button, which is solved by sending a notification at the same time. In order for it to contain useful information, we parse the output of =pactl get-sink-volume= to retrieve the current volume (*after* the change).
+
+This is all put together in the following script, which takes as an argument a string describing the desired change in volume.
+
+#+BEGIN_SRC sh :tangle ~/dotfiles/scripts/sound-change :results output silent
+#!/usr/bin/sh
+
+RUNNING_SINK=$(pactl list sinks short | grep RUNNING | cut -f 1)
+pactl set-sink-volume $RUNNING_SINK $1
+CURRENT_VOLUME=$(pactl get-sink-volume $RUNNING_SINK | grep -v balance | cut -d '/' -f 2)
+echo $CURRENT_VOLUME
+notify-send "Sound: $CURRENT_VOLUME" -t 1000
+#+END_SRC
+
+* Screenshots
+=grim= is used to the screenshot itself; =slurp= is used to select only a subset of the visible output(s) (which =grim= then captures). =etabli=, and in particular its =level variables=, can used to suggest a potential path to store the result.
+
+
+#+BEGIN_SRC sh :tangle ~/dotfiles/scripts/screencap :results output silent :noweb yes
+#!/usr/bin/sh
+
+TARGET_DIR=$(<<setup.org:etabli_board()>> -n dir -q)
+if [[ "$TARGET_DIR" == "" ]]; then
+    TARGET_DIR=$(xdg-user-dir PICTURES)
+fi
+FILE_NAME=$TARGET_DIR/$(uuidgen).png
+grim  -g "$(slurp)" "$FILE_NAME"
+if [[ -f $FILE_NAME ]]; then
+    notify-send "$FILE_NAME has been created"
+else
+    echo "capture cancelled"
+fi
+
+#+END_SRC
+* Signal
+The =signal= secrets are stored in a directory that is desktop environment-dependent. Thus, signal must be started from the command-line with a specific argument since it assumes we using =gnome=.
+
+#+BEGIN_SRC sh :tangle ~/dotfiles/scripts/signal.sh
+#!/usr/bin/sh
+
+signal-desktop --password-store="gnome-libsecret"
+#+END_SRC
+
+* Emacs
+For emacs, the specific command depends on the computer on which it is running, so we first check the computer name and set the command accordingly. To simplify further scripting, we also make an alias of it.
+
+
+#+BEGIN_SRC sh :tangle ~/dotfiles/scripts/editor :results output silent
+#!/usr/bin/sh
+
+if [[ $(hostname) == "a-laptop" ]]; then
+    echo "laptop emacs"
+    emacs $@
+else
+    echo "desktop emacs"
+    ~/new-emacs/latest/install/bin/emacs-31.0.50 $@
+fi
+#+END_SRC
+* Window management
+
+** Layout switch script
+#+BEGIN_SRC python :tangle ~/dotfiles/scripts/split-layout.py :results output 
+from i3ipc import Connection, Event
+
+if __name__ == "__main__":
+    wm = Connection()
+    x = wm.get_tree().find_focused()
+    current = x.parent.layout
+    print(x.name, current)
+    if current in ["splitv", "none"]:
+        wm.command("splith")
+    else:
+        wm.command("splitv")
+#+END_SRC

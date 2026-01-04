@@ -1,0 +1,26 @@
+#+TITLE: Etabli
+#+setupfile: setup.org
+
+* Basic configuration
+
+#+BEGIN_SRC toml :tangle ~/.etabli_config.toml :noweb yes
+board_path = "~/.etabli_board"
+dmenu = "rofi -dmenu -config ~/.config/rofi/rofi.rasi -i -p"
+hrule = " "
+#+END_SRC
+
+* Theme
+
+#+BEGIN_SRC sh :tangle ~/.etabli_config.toml :noweb yes
+<<setup.org:theme("--etabli")>>
+#+END_SRC
+
+#+RESULTS:
+
+* Prepare
+#+BEGIN_SRC toml :tangle ~/.etabli_config.toml :noweb yes
+[prepare]
+firefox = "firefox"
+comms = ["thunderbird", "signal-desktop --password-store=gnome-libsecret", "chromium-browser https://naro.brute-force.eu/element/#/home"]
+steam = "steam"
+#+END_SRC

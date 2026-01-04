@@ -1,0 +1,846 @@
+#+TITLE: Emacs Configuration
+#+STARTUP: overview
+#+SETUPFILE: ../setup.org
+#+PROPERTY: header-args  :tangle ~/.emacs.el  :noweb yes
+
+
+* Installation
+* Core setup
+** Ensuring efficiency
+Following the advice of the [[https://github.com/jamescherti/compile-angel.el][compile-angel]] developer, I start with the following. It ensures that all packages are compiled "natively" (i.e. into machine language), and that the resulting programs are used.
+
+#+BEGIN_SRC elisp
+  (use-package compile-angel
+    :ensure t
+
+    :config
+    ;; Set `compile-angel-verbose' to nil to disable compile-angel messages.
+    ;; (When set to nil, compile-angel won't show which file is being compiled.)
+    (setq compile-angel-verbose t)
+
+    ;; Uncomment the line below to compile automatically when an Elisp file is saved
+    ;; (add-hook 'emacs-lisp-mode-hook #'compile-angel-on-save-local-mode)
+
+    ;; The following directive prevents compile-angel from compiling your init
+    ;; files. If you choose to remove this push to `compile-angel-excluded-files'
+    ;; and compile your pre/post-init files, ensure you understand the
+    ;; implications and thoroughly test your code. For example, if you're using
+    ;; the `use-package' macro, you'll need to explicitly add:
+    ;; (eval-when-compile (require 'use-package))
+    ;; at the top of your init file.
+    (push "/init.el" compile-angel-excluded-files)
+
+    ;; A global mode that compiles .el files before they are loaded
+    ;; using `load' or `require'.
+    (compile-angel-on-load-mode 1))
+
+  ;; Ensure Emacs loads the most recent byte-compiled files.
+(setopt load-prefer-newer t)
+
+;; Make Emacs Native-compile .elc files asynchronously by setting
+;; `native-comp-jit-compilation' to t.
+(setopt native-comp-jit-compilation t)
+#+END_SRC
+** Startup
+The inital-scratch-message is added by hand as it would just be added automatically otherwise. Miscellaneous appearance stuff follows:
++ remove startup screen https://stackoverflow.com/questions/744672/unable-to-hide-welcome-screen-in-emacs
++ remove toolbars http://kb.mit.edu/confluence/display/istcontrib/Disabling+the+Emacs+menubar%2C+toolbar%2C+or+scrollbar
++ initial buffer: https://emacs.stackexchange.com/questions/15081/programming-of-initial-buffer-choice
++ don't check for the "safety" of local variables
+
+The signature verification is disabled because of the OS on the
+desktop being too old.
+#+BEGIN_SRC emacs-lisp 
+(setq initial-buffer-choice "~/org/todo.org"
+      inhibit-startup-screen t)
+
+(menu-bar-mode -1) 
+(tool-bar-mode -1)
+(setq package-check-signature nil)
+(setq enable-local-variables :all)
+(require 'cl-lib)
+#+END_SRC
+
+
+Instead of relying on the =.emacs.d= directory for testing, we explicitely set the directory in which packages are installed.
+
+#+BEGIN_SRC emacs-lisp 
+(setq package-user-dir "~/dotfiles/emacs/elpa")
+#+END_SRC
+
+*** "emacs" package
+see https://www.gnu.org/software/emacs/manual/html_mono/use-package.html#The-emacs-package
+*** Quick restart
+To simplify the update of an emacs server without shutting it down, the following function can be used.
+
+#+BEGIN_SRC emacs-lisp
+(defun pi2/6-reinitialize-emacs()
+  (interactive)
+  (load-file "~/.emacs.el")
+  (revert-buffer)
+)
+#+END_SRC
+
+** Use-package
+  
+#+BEGIN_SRC emacs-lisp 
+(require 'package)
+(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa-backup" . "http://www.mirrorservice.org/sites/stable.melpa.org/packages/") t)
+(package-initialize)
+(require 'use-package)
+#+END_SRC
+
+** Appearance
+*** Font
+Using [[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][fira code]] because it looks nice:
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'default-frame-alist '(font . "Fira Code" ))
+(set-face-attribute 'default t :font "Fira Code")
+#+END_SRC
+
+*** Color theme
+Shortlist of potentially good themes:
+- snow ([[https://emacsthemes.com/themes/snow-theme.html][link]])
+- poet ([[https://emacsthemes.com/themes/poet-theme.html][link]])
+- autumn ([[https://emacsthemes.com/themes/autumn-light-theme.html][link]])
+- white-sand ([[https://emacsthemes.com/themes/white-sand-theme.html][link]])
+- blue-mood ([[https://emacsthemes.com/themes/blue-mood-theme.html][link]])
+- flat-ui ([[https://emacsthemes.com/themes/flatui-emacs-theme.html][link]])
+- spacemacs ([[https://github.com/nashamri/spacemacs-theme][links]])
+When loading the them, the =t= argument is added to drop the prompt asking if it is OK to load a theme as it contains potentially harmful elisp code.
+
+In the end, I made my own theme called =discreet-light=. I use this one.
+
+#+BEGIN_SRC emacs-lisp
+(load-file "~/dotfiles/emacs/discret-light-theme.el")
+(load-theme 'discret-light t)
+#+END_SRC
+
+*** Line behaviour
+**** Numbering
+=Linum-Mode= being bothersome, I switched to the built-in =display-line-number-mode= (as suggested [[https://www.emacswiki.org/emacs/LineNumbers][here]]).
+#+BEGIN_SRC emacs-lisp 
+(global-display-line-numbers-mode 1)
+#+END_SRC
+
+**** Line wrapping
+In order for lines not to spill out of the window, we use the following.
+
+#+BEGIN_SRC emacs-lisp 
+(global-visual-line-mode t)
+#+END_SRC
+
+**** Current line
+The current line is highlighted by being of a slightly different color.
+
+#+BEGIN_SRC emacs-lisp 
+(global-hl-line-mode)
+#+END_SRC
+
+*** Finding Cursor
+In order to make the cursor easier to find (e.g. when new emacs windows are opened, =beacon= can help (see [[https://github.com/Malabarba/beacon][its homepage]]). It is a package (that must be installed). The following activates the corresponding global mode, and ensures that the beacon blinks whenever the emacs window or the actual window is changed.
+
+#+BEGIN_SRC emacs-lisp 
+(use-package beacon
+  :ensure t
+  :config
+  (beacon-mode)
+  (setq beacon-blink-when-window-changes t
+        beacon-blink-when-focused t
+        beacon-color "<<../setup.org:focus-color()>>"
+        beacon-size 15
+        beacon-blink-when-window-scrolls t))
+#+END_SRC
+
+** Scripts
+In order for this system to work well, the scripts in [[./helper-scripts/]] need to be copied somewhere in the path, execution rights added, and extension removed.
+** File Handling
+Emacs, by default, asks for confirmation before following symbolic
+links. It is annoying; the following gets rid of this ([[https://emacs.stackexchange.com/questions/41286/follow-symlinked-directories-in-dired][source]]).
+
+#+BEGIN_SRC emacs-lisp 
+(setq find-file-visit-truename t)
+#+END_SRC
+* TODO Projects
+Setup projectile
+
+#+BEGIN_SRC elisp
+  (defun get-buffers-matching-mode (mode)
+    "Returns a list of buffers where their major-mode is equal to MODE"
+    (let ((buffer-mode-matches '()))
+      (dolist (buf (buffer-list))
+        (with-current-buffer buf
+          (when (eq mode major-mode)
+            (push buf buffer-mode-matches))))
+      buffer-mode-matches))
+
+
+  (defun multi-occur-org-in-this-folder ()
+    "Show all lines matching REGEXP in buffers with this major mode."
+    (interactive)
+    (multi-occur
+     (mapcar 'find-file (directory-files "." t "[^.]+\.org$")) 
+     (car (occur-read-primary-args))))
+
+
+  (defun pi2-6-find-file-in-project-or-not()
+    (interactive)
+    (if (boundp 'meuporg-project-name)
+        (projectile-find-file)
+      (find-file)))
+
+  (defun pi2-6-occur-in-project-or-folder()
+    (interactive)
+    (if (boundp 'meuporg-project-name)
+        (projectile-multi-occur)
+      (multi-occur-org-in-this-folder)
+      ))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (use-package projectile
+    :ensure t
+
+    :custom
+    (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
+    (projectile-project-types nil)
+    (projectile-completion-system 'auto)
+    
+    :config
+    (projectile-mode)
+    (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
+    (projectile-register-project-type 'meuporg-project '(".projectile")
+                                      :project-file ".projectile"
+                                      :compile "make")
+    )
+
+#+END_SRC
+
+* Org
+** Common settings
+#+BEGIN_SRC elisp
+  (setopt org-startup-indented t
+                org-pretty-entities t
+                org-hide-emphasis-markers t
+                org-startup-with-inline-images t
+                org-image-actual-width '(300)
+                org-tags-column 10
+                org-link-elisp-confirm-function nil
+              )
+#+END_SRC
+
+
+
+#+BEGIN_SRC elisp
+  (setopt
+   org-file-apps
+   '(
+     ("\\.mm\\'" . default)
+     ("\\.x?html?\\'" . default)
+     ("\\.pdf::#\\([0-9]+\\)?" . "evince %s -i %1")
+                                          ; ("\\.pdf::\\(\\?\\(:[[:alnum:]]\\|[[:space:]]\\|[[:punct:]]\\)+\\)?" . "evince %s -l \"%1\"")
+     ("\\.pdf::\\([a-zA-Z0-9,.; ]+\\)?" . "evince %s -l \"%1\"")
+     ("\\.pdf" . "evince %s")
+     ("\\.mp4" . "vlc %s")
+     ("\\.webm" . "vlc %s")
+     (auto-mode . emacs)
+     ))
+
+  (setopt org-link-frame-setup
+          '((vm . vm-visit-folder-other-frame)
+            (vm-imap . vm-visit-imap-folder-other-frame)
+            (gnus . org-gnus-no-new-news)
+            (file . find-file)
+            (wl . wl-other-frame)))
+#+END_SRC
+
+
+
+#+BEGIN_SRC elisp
+;; (use-package org-superstar
+;;   :ensure t
+;;   )
+
+(use-package org-fragtog
+  :ensure t
+
+  :after org
+
+  :custom
+  (org-startup-with-latex-preview t)
+
+  :custom
+  (org-format-latex-options
+   (plist-put org-format-latex-options :scale 1.5)
+   (plist-put org-format-latex-options :foreground 'auto)
+   (plist-put org-format-latex-options :background 'auto))
+  )
+
+(use-package org
+  :ensure t
+  
+  :mode
+  (("\\.org$" . org-mode))
+  
+  :hook
+  (org-mode . (lambda ()
+                (org-fragtog-mode)
+                ;(org-superstar-mode)
+                (org-num-mode)))
+  )
+#+END_SRC
+** Data Storage
+*** Tags
+The idea is to have mere annotations in files that are not intended to help with keeping track of projects (typically, dotfiles such as this one). These are of two types. The first documents the state of the heading:
+- ongoingWork :: I am currently working on it;
+- attentionNeeded :: I am not working on it at the moment but it will need to happen at some point;
+- stable :: I am happy with the current state of this heading, and am not plann ing to modify it.
+
+A permanent list of tags is specified first. It has to be set with =setopt=, otherwise it doesn't work.
+
+#+BEGIN_SRC elisp
+(setopt org-tag-persistent-alist
+       '(("ongoingWork" . ?o)
+         ("attentionNeeded" . ?n)
+         ("stable" . ?s)
+         ("hack" . ?h)))
+#+END_SRC
+
+Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It simply describes which face to use for each of these tags.
+
+#+BEGIN_SRC elisp
+(setopt org-tag-faces
+        '(("ongoingWork" . (:background "yellow" :foreground "dim gray"))
+          ("attentionNeeded" . (:background "orange" :foreground "dim gray"))
+          ("stable" . (:foreground "chartreuse2"))
+          ("hack" . (:foreground "tomato"))))
+
+#+END_SRC
+
+In order to allow the use off different colors in file vaults, it is possible to specify a local set of colors in the =dir-locals= file by creating a variable called =local-org-tag-faces=. Its content is added to the main =org-tag-faces= by the following snippet which was surprisingly hard to write. Indeed, =dir-locals= variables are only set *after* the major mode is setup. As a consequence, using its content requires the use of a later hook.
+
+#+BEGIN_SRC elisp
+(add-hook
+ 'after-change-major-mode-hook
+ (lambda ()
+   (if (and (boundp 'local-org-tag-faces))
+       (setopt org-tag-faces local-org-tag-faces))))
+#+END_SRC
+** Attach enhancement
+#+BEGIN_SRC elisp
+  (defun pi2-6-attach-make-link()
+    (interactive)
+    (end-of-line)
+    (re-search-backward "^\\(\\*+\\) +\\([^:]+\\)")
+    (replace-match "\\1 [[elisp:(org-attach-open)][\\2]] "))
+
+  (advice-add 'org-attach :after #'pi2-6-attach-make-link)
+#+END_SRC
+** Org babel
+We need to enable the languages in babel. This is done as follows ([[https://emacs-orgmode.gnu.narkive.com/hmJIUIeQ/o-bug-org-babel-execute-src-block-no-org-babel-execute-function-for-python][source]]).
+#+BEGIN_SRC emacs-lisp
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t)
+     (C . t)
+     (shell . t)))
+#+END_SRC
+
+
+Some more tweaks are needed though, in particular we need to tell
+org-mode to use =python3= rather than =python= as a command. This is
+done as [[https://emacs.stackexchange.com/questions/28184/org-mode-how-can-i-point-to-python3-5-in-my-org-mode-doc][here]]. We also org-mode not to ask for a confirmation everytime
+we evaluate a code block.
+#+BEGIN_SRC emacs-lisp
+(setq org-babel-python-command "python3"
+      org-confirm-babel-evaluate nil)
+#+END_SRC
+
+** TODO Org-Agenda
+#+BEGIN_SRC emacs-lisp
+
+(setq org-agenda-files '("~/roam/projects/"))
+
+#+END_SRC
+
+** TODO Org Roam
+#+BEGIN_SRC elisp
+(use-package org-roam
+  :ensure t
+  :init
+  (setq org-roam-v2-ack t)
+  :custom
+  (org-roam-directory (file-truename "~/roam/"))
+  (org-roam-completion-everywhere t)
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)))
+  ;; :bind (("M-ç l" . pi2-6-org-roam-find-paper)
+  ;;        ("M-ç o" . pi2-6-org-roam-find-other)
+  ;;        ("M-ç r" . pi2-6-org-roam-find-review)
+  ;;        ("M-ç c" . org-roam-capture)
+  ;;        ("M-ç i" . org-roam-node-insert)
+  ;;        ("M-ç m" . pi2-6/open-meuporg-roam)
+  ;;        )
+  :config
+  (org-roam-setup))
+
+(org-roam-db-autosync-mode)
+#+END_SRC
+* LaTeX
+** LSP
+Not very convincing, auctex should be all I need.
+
+#+BEGIN_SRC elisp :tangle no
+(use-package lsp-latex
+  :ensure t
+  :init
+  (setq lsp-latex-texlab-executable "~/dotfiles/tools/texlab/texlab-bin")
+
+  )
+#+END_SRC
+* Input/Editing handling
+** Auto-completion
+*** Orderless
+From the [[https://github.com/oantolin/orderless][orderless documentation]]. 
+
+#+BEGIN_SRC elisp
+;; Optionally use the `orderless' completion style.
+(use-package orderless
+  :ensure t
+  :custom
+  ;; (orderless-style-dispatchers '(orderless-affix-dispatch))
+  ;; (orderless-component-separator #'orderless-escapable-split-on-space)
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion))))
+  (completion-category-defaults nil) ;; Disable defaults, use our settings
+  (completion-pcm-leading-wildcard t) ;; Emacs 31: partial-completion behaves like substring
+)
+#+END_SRC
+
+*** Corfu
+Documentation: https://github.com/minad/corfu
+
+#+BEGIN_SRC elisp
+(use-package corfu
+  :ensure t
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  (corfu-preview-current nil)    ;; Disable current candidate preview
+  (corfu-preselect 'prompt)      ;; Preselect the prompt
+  (corfu-on-exact-match 'insert) ;; Configure handling of exact matches
+
+  ;; Enable Corfu only for certain modes. See also `global-corfu-modes'.
+  ;; :hook ((prog-mode . corfu-mode)
+  ;;        (shell-mode . corfu-mode)
+  ;;        (eshell-mode . corfu-mode))
+
+  :init
+  (global-corfu-mode)
+  
+  :config
+  (setq corfu-auto t
+        corfu-auto-delay 0.1
+        corfu-auto-trigger "." ;; Custom trigger characters
+        corfu-quit-no-match 'separator) ;; or t
+  ;; Enable optional extension modes:
+  ;; (corfu-history-mode)
+  ;; (corfu-popupinfo-mode)
+  )
+
+;; A few more useful configurations...
+(use-package emacs
+  :custom
+  ;; TAB cycle if there are only few candidates
+  (completion-cycle-threshold 3)
+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (tab-always-indent 'complete)
+
+  ;; Emacs 30 and newer: Disable Ispell completion function.
+  ;; Try `cape-dict' as an alternative.
+  (text-mode-ispell-word-completion nil)
+
+  ;; Hide commands in M-x which do not apply to the current mode.  Corfu
+  ;; commands are hidden, since they are not used via M-x. This setting is
+  ;; useful beyond Corfu.
+  (read-extended-command-predicate #'command-completion-default-include-p))
+#+END_SRC
+*** Vertico
+#+BEGIN_SRC elisp
+;; Enable Vertico.
+(use-package vertico
+  :ensure t
+  
+  :custom
+  ;; (vertico-scroll-margin 0) ;; Different scroll margin
+  (vertico-count 20) ;; Show more candidates
+  (vertico-resize nil) ;; Grow and shrink the Vertico minibuffer
+  (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
+  :init
+  (vertico-mode))
+
+;; Emacs minibuffer configurations.
+(use-package emacs
+  :custom
+  ;; Enable context menu. `vertico-multiform-mode' adds a menu in the minibuffer
+  ;; to switch display modes.
+  (context-menu-mode t)
+  ;; Support opening new minibuffers from inside existing minibuffers.
+  (enable-recursive-minibuffers t)
+  ;; Hide commands in M-x which do not work in the current mode.  Vertico
+  ;; commands are hidden in normal buffers. This setting is useful beyond
+  ;; Vertico.
+  (read-extended-command-predicate #'command-completion-default-include-p)
+  ;; Do not allow the cursor in the minibuffer prompt
+  (minibuffer-prompt-properties
+   '(read-only t cursor-intangible t face minibuffer-prompt)))
+#+END_SRC
+*** Cape
+#+BEGIN_SRC elisp
+;; Add extensions
+(use-package cape
+  :ensure t
+  ;; Bind prefix keymap providing all Cape commands under a mnemonic key.
+  ;; Press C-c p ? to for help.
+  :bind ("C-c p" . cape-prefix-map) ;; Alternative key: M-<tab>, M-p, M-+
+  ;; Alternatively bind Cape commands individually.
+  ;; :bind (("C-c p d" . cape-dabbrev)
+  ;;        ("C-c p h" . cape-history)
+  ;;        ("C-c p f" . cape-file)
+  ;;        ...)
+  :init
+  ;; Add to the global default value of `completion-at-point-functions' which is
+  ;; used by `completion-at-point'.  The order of the functions matters, the
+  ;; first function returning a result wins.  Note that the list of buffer-local
+  ;; completion functions takes precedence over the global list.
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-file)
+  (add-hook 'completion-at-point-functions #'cape-elisp-block)
+  (add-hook 'completion-at-point-functions #'cape-history)
+  ;; ...
+)
+#+END_SRC
+*** TODO Marginalia
+From the [[https://github.com/minad/marginalia][official documentation]]
+#+BEGIN_SRC elisp :tangle no
+;; Enable rich annotations using the Marginalia package
+(use-package marginalia
+  ;; Bind `marginalia-cycle' locally in the minibuffer.  To make the binding
+  ;; available in the *Completions* buffer, add it to the
+  ;; `completion-list-mode-map'.
+  :bind (:map minibuffer-local-map
+         ("M-A" . marginalia-cycle))
+
+  ;; The :init section is always executed.
+  :init
+
+  ;; Marginalia must be activated in the :init section of use-package such that
+  ;; the mode gets enabled right away. Note that this forces loading the
+  ;; package.
+  (marginalia-mode))
+#+END_SRC
+*** Consult
+Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-package-example][the officiel doc]].
+
+
+#+BEGIN_SRC elisp
+(global-unset-key (kbd "M-x"))
+
+  (use-package consult
+      :ensure t
+      ;; Replace bindings. Lazily loaded by `use-package'.
+      :bind (;; C-c bindings in `mode-specific-map'
+             ("C-c M-x" . consult-mode-command)
+             ([remap Info-search] . consult-info)
+             ;; C-x bindings in `ctl-x-map'
+             ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+             ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+             ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+             ;; Other custom bindings
+             ("M-V" . consult-yank-pop)                ;; orig. yank-pop
+             ;; M-g bindings in `goto-map'
+             ("M-x g" . consult-goto-line)             ;; orig. goto-line
+             ("M-x o" . consult-outline)               ;; Alternative: consult-org-heading
+             ("M-x m" . consult-mark)
+             ("M-x k" . consult-global-mark)
+             ("M-x i" . consult-imenu)
+             ("M-x I" . consult-imenu-multi)
+             ;; M-s bindings in `search-map'
+             ("M-x f" . consult-find)                  ;; Alternative: consult-fd
+             ("M-x l" . consult-locate)
+             ("M-x G" . consult-grep)
+             ;("M-x G" . consult-git-grep)
+             ("M-x r" . consult-ripgrep)
+             ("M-x l" . consult-line)
+             ("M-x L" . consult-line-multi)
+             ;; ("M-s k" . consult-keep-lines)
+             ;; ("M-s u" . consult-focus-lines)
+             ;; Isearch integration
+             ;("M-s e" . consult-isearch-history)
+      ;;        :map isearch-mode-map
+      ;;        ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+      ;;        ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+      ;;        ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+      ;;        ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+      ;;        ;; Minibuffer history
+      ;;        :map minibuffer-local-map
+      ;;        ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+      ;;        ("M-r" . consult-history)                ;; orig. previous-matching-history-element
+             )
+
+      ;; ;; The :init configuration is always executed (Not lazy)
+      :init
+
+      ;; Tweak the register preview for `consult-register-load',
+      ;; `consult-register-store' and the built-in commands.  This improves the
+      ;; register formatting, adds thin separator lines, register sorting and hides
+      ;; the window mode line.
+      (advice-add #'register-preview :override #'consult-register-window)
+      (setopt register-preview-delay 0.5)
+
+      ;; Use Consult to select xref locations with preview
+      (setopt xref-show-xrefs-function #'consult-xref
+              xref-show-definitions-function #'consult-xref)
+
+      ;; Configure other variables and modes in the :config section,
+      ;; after lazily loading the package.
+      :config
+
+      ;; Optionally configure preview. The default value
+      ;; is 'any, such that any key triggers the preview.
+      ;; (setq consult-preview-key 'any)
+      ;; (setq consult-preview-key "M-.")
+      ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+      ;; For some commands and buffer sources it is useful to configure the
+      ;; :preview-key on a per-command basis using the `consult-customize' macro.
+      (consult-customize
+       consult-theme :preview-key '(:debounce 0.2 any)
+       consult-ripgrep consult-git-grep consult-grep consult-man
+       consult-bookmark consult-recent-file consult-xref
+       consult-source-bookmark consult-source-file-register
+       consult-source-recent-file consult-source-project-recent-file
+       ;; :preview-key "M-."
+       :preview-key '(:debounce 0.4 any))
+
+      (setopt consult-narrow-key "<") ;; "C-+"
+
+      ;; Optionally make narrowing help available in the minibuffer.
+      ;; You may want to use `embark-prefix-help-command' or which-key instead.
+      ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
+    )
+#+END_SRC
+** TODO Yasnippet
+** 
+
+#+BEGIN_SRC emacs-lisp 
+(use-package yasnippet
+  :ensure t
+  :hook
+  (prg-mode . yas-minor-mode)
+  )
+#+END_SRC
+** Custom moving/editing commands
+First, a small helper functions: it unsets keyboard shortcut before assigning it to its new meaning.
+   
+#+BEGIN_SRC emacs-lisp
+(defun pi2-6-global-set-key (keys func)
+  (global-unset-key keys)
+  (local-unset-key keys)
+  (global-set-key keys func))
+#+END_SRC
+
+Now, the main function sets all the common keybindings that I use (many of which are based on an old ergoemacs version that I used a lot).
+
+#+BEGIN_SRC emacs-lisp
+  (defun pi2-6-reset-keys()
+    "Sets all the keybindings at once."
+    (interactive)
+
+    (cua-mode)
+    
+    ;(global-unset-key "C-p")
+    ;(local-unset-key  "C-p")
+  					; -- main functions
+    (pi2-6-global-set-key (kbd "M-SPC") 'set-mark-command)
+    (pi2-6-global-set-key (kbd "M-a") 'execute-extended-command)
+    (pi2-6-global-set-key (kbd "M-ù") 'execute-extended-command) ;; backup in case a mode redefines M-a
+
+  					; -- movements within sentences
+    (pi2-6-global-set-key (kbd "M-l") 'forward-char)
+    (pi2-6-global-set-key (kbd "M-o") 'forward-word)
+    (pi2-6-global-set-key (kbd "M-j") 'backward-char)
+    (pi2-6-global-set-key (kbd "M-u") 'backward-word)
+    (pi2-6-global-set-key (kbd "M-h") 'move-beginning-of-line)
+    (pi2-6-global-set-key (kbd "M-m") 'move-end-of-line)
+    (pi2-6-global-set-key (kbd "M-i") 'previous-line)
+    (pi2-6-global-set-key (kbd "M-k") 'next-line)
+
+  					; -- bigger movements
+    (pi2-6-global-set-key (kbd "M-p") 'recenter-top-bottom)
+    (pi2-6-global-set-key (kbd "C-f") 'pi2-6-occur-in-project-or-folder)
+    (pi2-6-global-set-key (kbd "M-;") 'isearch-forward)
+    (pi2-6-global-set-key (kbd "M-:") 'isearch-backward)
+    (pi2-6-global-set-key (kbd "M-\" g") 'goto-line)
+    (pi2-6-global-set-key (kbd "M-\" s") 'pi2-6-save-anchor)
+    (pi2-6-global-set-key (kbd "M-\" b") 'pi2-6-back-to-anchor)
+
+                                          ; -- outline
+    (pi2-6-global-set-key (kbd "M-é") 'outline-forward-same-level)
+    (pi2-6-global-set-key (kbd "M-&") 'outline-backward-same-level)
+    (pi2-6-global-set-key (kbd "C-<tab>") 'outline-cycle)
+    (pi2-6-global-set-key (kbd "C-M-<tab>") 'outline-cycle-buffer)
+    
+
+  					; -- advanced interaction with region
+  					;(pi2-6-global-set-key (kbd "M-\" m") 'pi2-6-improved-selector)
+
+  					; -- deleting
+    (pi2-6-global-set-key (kbd "M-f") 'delete-char)
+    (pi2-6-global-set-key (kbd "M-r") 'kill-word)
+    (pi2-6-global-set-key (kbd "M-d") 'delete-backward-char)
+    (pi2-6-global-set-key (kbd "M-e") 'backward-kill-word)
+    (pi2-6-global-set-key (kbd "M-g") 'kill-line)
+
+  					; -- undo/redo
+    (pi2-6-global-set-key (kbd "M-z") 'undo)
+    (pi2-6-global-set-key (kbd "M-y") 'undo-redo)
+    (pi2-6-global-set-key (kbd "M--") 'repeat)
+
+  					; -- kill ring
+    ;; (pi2-6-global-set-key (kbd "M-c") 'kill-ring-save)
+    ;; (pi2-6-global-set-key (kbd "M-v") 'yank)
+    
+  					; -- more sophisticated text interaction
+    (pi2-6-global-set-key (kbd "M-q") 'fill-paragraph)
+    (pi2-6-global-set-key (kbd "C-_") 'yas-expand)
+    (pi2-6-global-set-key (kbd "M-'") 'comment-dwim)
+
+  					; -- insertions
+    (pi2-6-global-set-key (kbd "M-\" i") 'pi2-6-insert-time-stamp)
+    (pi2-6-global-set-key (kbd "M-\" t") 'pi2-6-insert-current-time)
+
+  					; -- rectangle manipulations
+    (pi2-6-global-set-key (kbd "C-x r x") 'kill-rectangle)
+    (pi2-6-global-set-key (kbd "C-x r c") 'copy-rectangle-as-kill)
+    (pi2-6-global-set-key (kbd "C-x r v") 'yank-rectangle)
+    (pi2-6-global-set-key (kbd "C-x r n") 'rectangle-number-lines)
+    (pi2-6-global-set-key (kbd "C-x r i") 'string-rectangle)
+
+  					; -- ispell/flyspell
+    (pi2-6-global-set-key (kbd "M-\" l") 'pi2-6-flyspell-mode)
+
+
+  					; -- interacting with buffers
+    (pi2-6-global-set-key (kbd "C-<prior>") 'previous-buffer)
+    (pi2-6-global-set-key (kbd "C-<next>")  'next-buffer)
+    (pi2-6-global-set-key (kbd "C-r")       'revert-buffer)
+    (pi2-6-global-set-key (kbd "C-S-b")     'ibuffer)
+    ;(pi2-6-global-set-key (kbd "C-b")       'bu)
+
+
+  					; -- interacting with files
+    (pi2-6-global-set-key (kbd "C-o") 'pi2-6-find-file-in-project-or-not)
+    (pi2-6-global-set-key (kbd "C-S-o") 'find-file)
+    (pi2-6-global-set-key (kbd "M-\" c") 'pi2-6-copy-link-to-current-file)
+    (pi2-6-global-set-key (kbd "M-\" o") 'pi2-6-open-terminal-in-directory)
+    (pi2-6-global-set-key (kbd "M-\" f") 'pi2-6-open-file-browser-in-directory)
+    (pi2-6-global-set-key (kbd "M-à") 'pi2-6-open-dired)
+
+  					; -- interacting with windows
+    (pi2-6-global-set-key (kbd "M-Q") 'delete-window)
+    (pi2-6-global-set-key (kbd "M-s") 'other-window)
+    (pi2-6-global-set-key (kbd "M-S") 'delete-other-windows)
+
+
+  					; -- interacting with frames
+    (pi2-6-global-set-key (kbd "C-S-n") 'make-frame-command)
+    (pi2-6-global-set-key (kbd "C-w")   'kill-buffer)
+    (pi2-6-global-set-key (kbd "C-s")   'save-buffer)
+
+  					; -- meuporg
+    (pi2-6-global-set-key (kbd "C-! u") 'pi2-6-meuporg-update-current-file)
+    (pi2-6-global-set-key (kbd "C-! a") 'pi2-6-agenda)
+    (pi2-6-global-set-key (kbd "C-! f") 'org-attach-open)
+    ;(pi2-6-global-set-key (kbd "C-! o") 'helm-projectile-find-file-dwim)
+    (pi2-6-global-set-key (kbd "C-! s") 'pi2-6-ag-string-in-project)
+    (pi2-6-global-set-key (kbd "C-! d") 'xref-find-definitions-other-window)
+    (pi2-6-global-set-key (kbd "C-! h") 'lsp-describe-thing-at-point)
+    (pi2-6-global-set-key (kbd "C-! b") 'xref-go-back)
+    )
+
+
+
+  (add-hook 'after-init-hook 'pi2-6-reset-keys)
+  (add-hook 'org-mode-hook 'pi2-6-reset-keys)
+  (add-hook 'c-mode-common-hook 'pi2-6-reset-keys)
+#+END_SRC
+
+* Programming
+** Appearance
+*** C-like languages
+Using "bsd", a proper style of indentation for C(-like) languages,
+much better than the GNU style in my opinion.
+
+We then set the offset to 4 characters, and remove all tabs.
+
+#+BEGIN_SRC elisp
+(setq c-default-style "bsd")
+(setq-default c-basic-offset 4)
+(setq-default indent-tabs-mode nil)
+#+END_SRC
+
+** TODO LSP
+
+#+BEGIN_SRC elisp
+(use-package lsp-mode
+  :ensure t
+
+  ;:config
+  ;(define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-workspace-symbol)
+
+  :hook
+  (python-mode . lsp)
+  (c++-mode . lsp)
+  (c-mode . lsp)
+  )
+
+
+(use-package lsp-ui
+  :ensure t
+  :config
+  (setq
+   lsp-ui-peek-enable t
+   )
+
+  :hook
+  (lsp-mode . lsp-ui-mode)
+  )
+#+END_SRC
+
+
+None of the python language servers I tried handle =cython=. Neither microsoft's =pyright= (which comes with as an entire nodeJS framework oO), nor the default =pylsp=, nor =jedi=. I haven't tried Palantir's because I have a soul.
+
+#+BEGIN_SRC elisp
+;; (use-package lsp-jedi
+;;   :ensure t)
+
+;; (use-package lsp-pyright
+;;   :ensure t
+;;   :custom (lsp-pyright-langserver-command "pyright") ;; or basedpyright
+;;   :hook (python-mode . (lambda ()
+;;                          (require 'lsp-pyright)
+;;                          (lsp))))  ; or lsp-deferred
+
+;; (add-to-list 'lsp-disabled-clients 'pylsp)
+;; (add-to-list 'lsp-disabled-clients 'pyright)
+
+
+#+END_SRC
+** TODO Meuporg

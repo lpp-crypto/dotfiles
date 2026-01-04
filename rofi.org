@@ -1,0 +1,102 @@
+#+TITLE: ROFI
+#+setupfile: setup.org
+
+
+We open the configuration section as follows:
+
+
+* Configuration
+#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+configuration {
+#+END_SRC
+
+
+** Core parameters
+#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+modi: "window,run,drun,filebrowser";
+matching: "fuzzy";
+terminal: "kitty";
+#+END_SRC
+
+** Appearance
+#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+width: 50;
+lines: 15;
+columns: 1;
+bw: 1;
+location: 0;
+line-margin: 3;
+line-padding: 5;
+padding: 20;
+yoffset: 0;
+xoffset: 0;
+fixed-num-lines: true;
+font: "Iosevka SS01 Medium 14";
+show-icons: true;
+icon-theme: "Zafiro-Nord-Black-Blue";
+#+END_SRC
+
+** Keyboard shortcuts
+These are intended to mimick my emacs setup. *the* killer feature of rofi!
+*** Moving around
+#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+kb-row-down: "Down,Alt+k";
+kb-row-up: "Up,Alt+i";
+kb-move-char-back: "Left,Alt+j";
+kb-move-char-forward: "Right,Alt+l";
+kb-move-word-back: "Alt+u,Control+Left";
+kb-move-word-forward: "Alt+o,Control+Right";
+kb-move-front: "Alt+h";
+kb-move-end: "Alt+m";      
+#+END_SRC
+
+*** Deleting
+#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+kb-remove-char-back: "BackSpace,Alt+d";
+kb-remove-char-forward: "Delete,Alt+f";
+kb-remove-word-back: "Alt+e,Control+BackSpace";
+kb-remove-word-forward: "Alt+r";        
+kb-remove-to-eol: "Control+k";
+#+END_SRC
+** filebrowser configuration
+=rofi= refuses to take ="~"= as a default directory, but using ="."= works just the same for some reason.
+
+#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+filebrowser {
+/** Directory the file browser starts in. */
+directory: ".";
+/**
+  ,* Sorting method. Can be set to:
+  ,*   - "name"
+  ,*   - "mtime" (modification time)
+  ,*   - "atime" (access time)
+  ,*   - "ctime" (change time)
+  ,*/
+sorting-method: "mtime";
+/** Group directories before files. */
+directories-first: true;
+}
+#+END_SRC
+** Finalization
+Closing the =configuration= section
+#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+}
+#+END_SRC
+
+* Theme
+#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent :noweb yes
+@theme "paper-float"
+
+entry {
+  text-color: <<setup.org:focus-color()>> ;
+  padding: 0em 1em 0em 1em ;
+  cursor-width: 8px;
+}
+
+element selected.normal {
+  background-color: <<setup.org:focus-color()>> ;
+}
+
+#+END_SRC
+
+

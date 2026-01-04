@@ -1,0 +1,90 @@
+#+TITLE: Common Setup Configuration
+#+PROPERTY: header-args :noweb yes
+
+* Common Variables
+** Computer dependent
+#+NAME: is-laptop
+#+BEGIN_SRC sh :noweb yes
+if [ $(hostname) = "a-laptop" ]; then
+    echo "laptop"
+else
+    echo ""
+fi
+#+END_SRC
+
+* Commands
+** Dmenu Replacement
+[[https://github.com/davatorium/rofi][rofi]] is a good =dmenu= allowing a lot of configuration. Its configuration file, =~/.config/rofi/rofi.rasi=, is generated in [[/home/leo/dotfiles/rofi.org][rofi.org]].
+
+#+NAME: dmenu
+#+BEGIN_SRC python
+return "rofi -dmenu -config ~/.config/rofi/rofi.rasi -i -p"
+#+END_SRC
+
+#+NAME: drun
+#+BEGIN_SRC python
+return "rofi -show drun -config ~/.config/rofi/rofi.rasi"
+#+END_SRC
+
+** Terminal
+#+NAME: term
+#+BEGIN_SRC python
+return "kitty"
+#+END_SRC
+
+** Etabli
+*** Executables
+#+NAME: etabli-dir
+#+BEGIN_SRC python
+~/.local/bin
+#+END_SRC
+
+#+NAME: etabli
+#+BEGIN_SRC python
+return "<<etabli-dir>>/etabli"
+#+END_SRC
+
+#+NAME: etabli_dmenu
+#+BEGIN_SRC python
+return "<<etabli-dir>>/etabli_dmenu"
+#+END_SRC
+
+#+NAME: etabli_daemons
+#+BEGIN_SRC python
+return "<<etabli-dir>>/etabli_daemons"
+#+END_SRC
+
+#+NAME: etabli_board
+#+BEGIN_SRC python
+return "<<etabli-dir>>/etabli_board"
+#+END_SRC
+
+#+NAME: etabli_theme
+#+BEGIN_SRC python
+return "<<etabli-dir>>/etabli_theme_generator"
+#+END_SRC
+** Theme
+#+NAME: background-color
+#+BEGIN_SRC sh :results output
+echo -n "#332b1e"
+#+END_SRC
+
+#+NAME: focus-color
+#+BEGIN_SRC sh :results output
+echo -n "#d9a032"
+#+END_SRC
+
+#+NAME: theme
+#+BEGIN_SRC sh :results output raw :var to_print="--etabli"
+<<setup.org:etabli_theme()>> \
+    --background   "<<background-color()>>" \
+    --focus        "<<focus-color()>>" \
+    --ontop        "#34854d" \
+    --active       "#BBBBBB" \
+    --inactive     "#707070" \
+    --symbol_open  " ("      \
+    --symbol_close ") "      \
+    $to_print
+#+END_SRC
+
+

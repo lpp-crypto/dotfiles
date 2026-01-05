@@ -163,20 +163,10 @@ Using [[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][fira code]] 
 #+END_SRC
 
 *** Color theme
-Shortlist of potentially good themes:
-- snow ([[https://emacsthemes.com/themes/snow-theme.html][link]])
-- poet ([[https://emacsthemes.com/themes/poet-theme.html][link]])
-- autumn ([[https://emacsthemes.com/themes/autumn-light-theme.html][link]])
-- white-sand ([[https://emacsthemes.com/themes/white-sand-theme.html][link]])
-- blue-mood ([[https://emacsthemes.com/themes/blue-mood-theme.html][link]])
-- flat-ui ([[https://emacsthemes.com/themes/flatui-emacs-theme.html][link]])
-- spacemacs ([[https://github.com/nashamri/spacemacs-theme][links]])
-When loading the them, the =t= argument is added to drop the prompt asking if it is OK to load a theme as it contains potentially harmful elisp code.
-
-In the end, I made my own theme called =discreet-light=. I use this one.
+I made my own theme called =cyanide-light=. I use this one.
 
 #+BEGIN_SRC emacs-lisp
-(load-file "~/dotfiles/emacs/discret-light-theme.el")
+(load-file "~/dotfiles/emacs/cyanide-light-theme.el")
 (load-theme 'discret-light t)
 #+END_SRC
 

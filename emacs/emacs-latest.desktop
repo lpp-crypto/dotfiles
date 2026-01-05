@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Exec=/home/ROCQ/cosmiq/lperrin/new-emacs/install/bin/emacs-28.2
+Name=pi26-EMACS
+Comment=Custom-compiled version of emacs
+Icon=/home/ROCQ/cosmiq/lperrin/new-emacs/install/share/icons/hicolor/32x32/apps/emacs.png
+

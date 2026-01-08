@@ -235,24 +235,25 @@ Setup projectile
 #+END_SRC
 
 #+BEGIN_SRC elisp
-  (use-package projectile
-    :ensure t
+    (use-package projectile
+      :ensure t
 
-    :custom
-    (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
-    (projectile-project-types nil)
-    (projectile-completion-system 'auto)
-    (projectile-require-project-root t)
-    
-    :config
-    (projectile-mode)
-    (setopt projectile-indexing-method 'hybrid)
-    (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
-    (projectile-register-project-type
-     'meuporg-project '(".projectile")
-     :project-file ".projectile"
-     :compile "make")
-    )
+      :custom
+      (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
+      (projectile-project-types nil)
+      (projectile-completion-system 'auto)
+      (projectile-require-project-root t)
+      
+      :config
+      (projectile-mode)
+      (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
+      (projectile-register-project-type
+       'meuporg-project '(".projectile")
+       :project-file ".projectile"
+       :compile "make")
+      (setq projectile-indexing-method 'native)
+      (setq projectile-enable-caching 'persistent)
+      )
 
 #+END_SRC
 

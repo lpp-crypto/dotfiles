@@ -51,7 +51,7 @@ exec_always nm-applet
 A regular keyboard (in particular, a laptop keyboard) must be setup in azerty and =capslock= is set to be another =ctrl=. The specific layout is =fr(oss)= in order to have the "espace insécable fine" and upper-case accented letters in the correct position. Run =man xkeyboard-config= for a list of options.
 
 #+BEGIN_SRC sh
-input "1:1:AT_Translated_Set_2_keyboard" {
+input * {
     xkb_layout fr(oss)
     xkb_options ctrl:nocaps
 }
@@ -202,7 +202,7 @@ bindsym $mod+8 exec swaymsg layout toggle split tabbed
 
 
 #+BEGIN_SRC sh
-bindsym $mod+9 exec python ~/dotfiles/scripts/split-layout.py
+bindsym $mod+9 exec python3 ~/dotfiles/scripts/split-layout.py
 
 # Make the current focus fullscreen
 bindsym $mod+0 fullscreen

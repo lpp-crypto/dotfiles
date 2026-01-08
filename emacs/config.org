@@ -64,6 +64,7 @@ Compilation is then performed using =make=.
 #+END_SRC
 
 * Core setup
+
 #+BEGIN_SRC emacs-lisp 
   ;;; -*- lexical-binding: t; -*- 
 
@@ -89,7 +90,8 @@ The initial comment is needed to remove a compilation warning (see e.g. [[https:
 #+BEGIN_SRC elisp
   (use-package compile-angel
     :ensure t
-
+    :demand t
+    
     :config
     ;; Set `compile-angel-verbose' to nil to disable compile-angel messages.
     ;; (When set to nil, compile-angel won't show which file is being compiled.)
@@ -132,12 +134,9 @@ The signature verification is disabled because of the OS on the desktop being to
 
   (menu-bar-mode -1) 
   (tool-bar-mode -1)
+  (setq enable-local-variables :all)
   (require 'cl-lib)
-  (setopt enable-local-variables :all)
 #+END_SRC
-
-*** "emacs" package
-see https://www.gnu.org/software/emacs/manual/html_mono/use-package.html#The-emacs-package
 ** Appearance
 *** Font
 Using [[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][fira code]] because it looks nice:
@@ -236,23 +235,25 @@ Setup projectile
 #+END_SRC
 
 #+BEGIN_SRC elisp
-  (use-package projectile
-    :ensure t
+    (use-package projectile
+      :ensure t
 
-    :custom
-    (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
-    (projectile-project-types nil)
-    (projectile-completion-system 'auto)
-    (projectile-require-project-root t)
-    
-    :config
-    (projectile-mode)
-    (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
-    (projectile-register-project-type
-     'meuporg-project '(".projectile")
-     :project-file ".projectile"
-     :compile "make")
-    )
+      :custom
+      (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
+      (projectile-project-types nil)
+      (projectile-completion-system 'auto)
+      (projectile-require-project-root t)
+      
+      :config
+      (projectile-mode)
+      (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
+      (projectile-register-project-type
+       'meuporg-project '(".projectile")
+       :project-file ".projectile"
+       :compile "make")
+      (setq projectile-indexing-method 'native)
+      (setq projectile-enable-caching 'persistent)
+      )
 
 #+END_SRC
 
@@ -381,7 +382,7 @@ Now that org-babel is setup, we can define the following function which tangles 
 #+BEGIN_SRC emacs-lisp
   (defun pi2-6/reset-config()
     (interactive)
-    (with-current-buffer (find-file-noselect "~/dotfiles/emacs/config.org")
+    (with-current-buffer (find-file-noselect (file-truename "~/dotfiles/emacs/config.org"))
       (org-babel-tangle))
     (native-compile "~/.emacs.el"))
 #+END_SRC
@@ -912,29 +913,28 @@ We then set the offset to 4 characters, and remove all tabs.
 ** TODO LSP
 
 #+BEGIN_SRC elisp
-(use-package lsp-mode
-  :ensure t
+  (use-package lsp-mode
+    :ensure t
+    ;:config
+    ;(define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-workspace-symbol)
 
-  ;:config
-  ;(define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-workspace-symbol)
-
-  :hook
-  (python-mode . lsp)
-  (c++-mode . lsp)
-  (c-mode . lsp)
-  )
+    :hook
+    (python-mode . lsp)
+    (c++-mode . lsp)
+    (c-mode . lsp)
+    )
 
 
-(use-package lsp-ui
-  :ensure t
-  :config
-  (setq
-   lsp-ui-peek-enable t
-   )
+  (use-package lsp-ui
+    :ensure t
+    :config
+    (setq
+     lsp-ui-peek-enable t
+     )
 
-  :hook
-  (lsp-mode . lsp-ui-mode)
-  )
+    :hook
+    (lsp-mode . lsp-ui-mode)
+    )
 #+END_SRC
 
 

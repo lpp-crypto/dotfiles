@@ -348,14 +348,20 @@ In order to allow the use off different colors in file vaults, it is possible to
    )
 #+END_SRC
 ** Attach enhancement
+Attachments are, by default, not openable with a simple mouse click. Furthermore, the corresponding headings don't look like links. This is easily fixed by the following function which can turns a heading with an attachment into a link opening it. This is easily done by having the link execute the =org-attach-open= function.
+
+Then, this function is added as an advice to =org-attach= so that it is done automatically every time.
+
+It doesn't work perfectly if there is a ':' in the heading, but it's rare enough and easy enough to fix by hand that I don't care.
+
 #+BEGIN_SRC elisp
-  (defun pi2-6-attach-make-link()
+  (defun pi2-6/attach-make-link()
     (interactive)
     (end-of-line)
-    (re-search-backward "^\\(\\*+\\) +\\([^:]+\\)")
-    (replace-match "\\1 [[elisp:(org-attach-open)][\\2]] "))
+    (re-search-backward "^\\(\\*+\\) +\\([^:]+\\) +:")
+    (replace-match "\\1 [[elisp:(org-attach-open)][\\2]]  :"))
 
-  (advice-add 'org-attach :after #'pi2-6-attach-make-link)
+  (advice-add 'org-attach :after #'pi2-6/attach-make-link)
 #+END_SRC
 ** Org babel
 We need to enable the languages in babel. This is done as follows ([[https://emacs-orgmode.gnu.narkive.com/hmJIUIeQ/o-bug-org-babel-execute-src-block-no-org-babel-execute-function-for-python][source]]).
@@ -638,24 +644,26 @@ Documentation: https://github.com/minad/corfu
   ;; ...
 )
 #+END_SRC
-*** TODO Marginalia
-From the [[https://github.com/minad/marginalia][official documentation]]
-#+BEGIN_SRC elisp :tangle no
-;; Enable rich annotations using the Marginalia package
-(use-package marginalia
-  ;; Bind `marginalia-cycle' locally in the minibuffer.  To make the binding
-  ;; available in the *Completions* buffer, add it to the
-  ;; `completion-list-mode-map'.
-  :bind (:map minibuffer-local-map
-         ("M-A" . marginalia-cycle))
+*** Marginalia
+The purpose of this package is to provide additional information in the mini-buffer, for example the start of the documentation of a function, when said function is displayed in said minibuffer.
 
-  ;; The :init section is always executed.
-  :init
+The following use-package macro is straight from the [[https://github.com/minad/marginalia][official documentation]] (I just added =:ensure t=). 
+#+BEGIN_SRC elisp 
+  ;; Enable rich annotations using the Marginalia package
+  (use-package marginalia
+    :ensure t
+    ;; Bind `marginalia-cycle' locally in the minibuffer.  To make the binding
+    ;; available in the *Completions* buffer, add it to the
+    ;; `completion-list-mode-map'.
+    :bind (:map minibuffer-local-map
+           ("M-A" . marginalia-cycle))
 
-  ;; Marginalia must be activated in the :init section of use-package such that
-  ;; the mode gets enabled right away. Note that this forces loading the
-  ;; package.
-  (marginalia-mode))
+    ;; The :init section is always executed.
+    :init
+    ;; Marginalia must be activated in the :init section of use-package such that
+    ;; the mode gets enabled right away. Note that this forces loading the
+    ;; package.
+    (marginalia-mode))
 #+END_SRC
 *** Consult
 Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-package-example][the officiel doc]].

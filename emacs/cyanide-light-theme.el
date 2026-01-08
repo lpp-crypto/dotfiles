@@ -71,7 +71,7 @@
 '(org-block ((t (:background "old lace"))))
 '(org-block-end-line  ((t (:background "moccasin" :foreground "Brown4"))))
 
-'(org-verbatim ((t (:background "old lace" :foreground "dark olive green"))))
+'(org-verbatim ((t (:background "old lace" :foreground "chartreuse4" :weight semi-light))))
 '(org-link ((t (:foreground "midnight blue" :background "alice blue" :underline (:color "gray" :style dashes)))))
 '(org-tag  ((t (:background "#eeeee8" :foreground "steel blue" :weight semi-light :height 0.8))))
 '(org-drawer  ((t (:background "#eeeee8" :foreground "#727272" :weight semi-light :height 0.7))))
@@ -86,8 +86,7 @@
 '(font-latex-sectioning-4-face ((t (:inherit 'outline-3))))
 '(font-latex-sectioning-5-face ((t (:inherit 'outline-4))))
 
-'(font-latex-math-face ((t (:background "#eeeee8" :foreground "DarkGoldenrod4" :weight thin))))
-'(font-latex-script-char-face ((t (:background "#eeeee8" :foreground "DarkGoldenrod2" :weight thin))))
+'(font-latex-math-face ((t :inherit 'org-verbatim)))
 
 '(calendar-today-face ((t (:underline t))))
 '(diary-face ((t (:foreground "red"))))
@@ -169,6 +168,16 @@
    ("\\(cppclass\\)[[:blank:]]+" 1 '(:inherit 'font-lock-keyword-face :background  "thistle") t)
    ("\\(extern\\)[[:blank:]]+" 1 '(:inherit 'font-lock-keyword-face :background "thistle") t)
    ("^[[:blank:]]*cdef[[:blank:]]+\\(.*\\)(.*):" 1 'font-lock-function-name-face t)))
+
+(font-lock-add-keywords
+ 'LaTeX-mode
+ '(
+   ("\\(\\\\.*section\\*?\\){" 1 'cyanide-num-face t)
+   ("\\(\\\\paragraph\\*?\\){" 1 'cyanide-num-face t))
+ 'latex-mode
+ '(
+   ("\\(\\\\.*section\\*?\\){" 1 'cyanide-num-face t)
+   ("\\(\\\\paragraph\\*?\\){" 1 'cyanide-num-face t)))
 
 ;;;###autoload
 (when load-file-name

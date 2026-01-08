@@ -244,11 +244,16 @@ bindsym $mod+twosuperior exec <<setup.org:etabli_dmenu()>> --choose_workspace
 bindsym $mod+Shift+twosuperior exec <<setup.org:etabli_dmenu()>> --choose_workspace_with_window
 #+END_SRC
 ** Special keys
+*** Screencap
+#+BEGIN_SRC sh
+bindsym $mod+c exec sh ~/dotfiles/scripts/screencap
+#+END_SRC
+
 *** Sound control
 #+BEGIN_SRC sh
 bindsym XF86AudioMute exec pactl set-sink-mute $(pactl list sinks short | grep RUNNING | cut -f 1) toggle
-bindsym XF86AudioRaiseVolume exec sh ~/new-emacs/scripts/sound-change "+5%"
-bindsym XF86AudioLowerVolume exec sh ~/new-emacs/scripts/sound-change "-5%"
+bindsym XF86AudioRaiseVolume exec sh ~/dotfiles/scripts/sound-change "+5%"
+bindsym XF86AudioLowerVolume exec sh ~/dotfiles/scripts/sound-change "-5%"
 #+END_SRC
 
 *** Light control

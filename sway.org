@@ -202,7 +202,7 @@ bindsym $mod+8 exec swaymsg layout toggle split tabbed
 
 
 #+BEGIN_SRC sh
-bindsym $mod+9 exec python ~/dotfiles/scripts/split-layout.py
+bindsym $mod+9 exec python3 ~/dotfiles/scripts/split-layout.py
 
 # Make the current focus fullscreen
 bindsym $mod+0 fullscreen

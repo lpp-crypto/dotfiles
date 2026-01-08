@@ -64,6 +64,21 @@ Compilation is then performed using =make=.
 #+END_SRC
 
 * Core setup
+** Use-package
+  
+#+BEGIN_SRC emacs-lisp 
+  (eval-when-compile (require 'use-package))
+  (require 'package)
+  (setopt package-user-dir (file-truename "~/dotfiles/emacs/elpa"))
+  (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+  (add-to-list 'package-archives '("melpa-backup" . "http://www.mirrorservice.org/sites/stable.melpa.org/packages/") t)
+  (setopt package-check-signature nil)
+  ;; (package-initialize)
+  (require 'use-package)
+
+
+#+END_SRC
+
 ** Ensuring efficiency :stable:
 Following the advice of the [[https://github.com/jamescherti/compile-angel.el][compile-angel]] developer, I start with the following. It ensures that all packages are compiled "natively" (i.e. into machine language), and that the resulting programs are used.
 
@@ -76,7 +91,8 @@ The initial comment is needed to remove a compilation warning (see e.g. [[https:
 
   (use-package compile-angel
     :ensure t
-
+    :demand t
+    
     :config
     ;; Set `compile-angel-verbose' to nil to disable compile-angel messages.
     ;; (When set to nil, compile-angel won't show which file is being compiled.)
@@ -119,17 +135,10 @@ The signature verification is disabled because of the OS on the desktop being to
 
   (menu-bar-mode -1) 
   (tool-bar-mode -1)
-  ;(setq package-check-signature nil)
   (setq enable-local-variables :all)
   (require 'cl-lib)
 #+END_SRC
 
-
-Instead of relying on the =.emacs.d= directory for testing, we explicitely set the directory in which packages are installed.
-
-#+BEGIN_SRC emacs-lisp 
-(setq package-user-dir "~/dotfiles/emacs/elpa")
-#+END_SRC
 
 *** "emacs" package
 see https://www.gnu.org/software/emacs/manual/html_mono/use-package.html#The-emacs-package
@@ -143,17 +152,6 @@ To simplify the update of an emacs server without shutting it down, the followin
   (revert-buffer)
 )
 #+END_SRC
-
-** Use-package
-  
-#+BEGIN_SRC emacs-lisp 
-(require 'package)
-(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-(add-to-list 'package-archives '("melpa-backup" . "http://www.mirrorservice.org/sites/stable.melpa.org/packages/") t)
-(package-initialize)
-(require 'use-package)
-#+END_SRC
-
 ** Appearance
 *** Font
 Using [[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][fira code]] because it looks nice:
@@ -167,7 +165,7 @@ I made my own theme called =cyanide-light=. I use this one.
 
 #+BEGIN_SRC emacs-lisp
 (load-file "~/dotfiles/emacs/cyanide-light-theme.el")
-(load-theme 'discret-light t)
+(load-theme 'cyanide-light t)
 #+END_SRC
 
 *** Line behaviour
@@ -422,7 +420,7 @@ Now that org-babel is setup, we can define the following function which tangles 
 #+BEGIN_SRC emacs-lisp
   (defun pi2-6/reset-config()
     (interactive)
-    (with-current-buffer (find-file-noselect "~/dotfiles/emacs/config.org")
+    (with-current-buffer (find-file-noselect (file-truename "~/dotfiles/emacs/config.org"))
       (org-babel-tangle))
     (native-compile "~/.emacs.el"))
 #+END_SRC
@@ -865,29 +863,28 @@ We then set the offset to 4 characters, and remove all tabs.
 ** TODO LSP
 
 #+BEGIN_SRC elisp
-(use-package lsp-mode
-  :ensure t
+  (use-package lsp-mode
+    :ensure t
+    ;:config
+    ;(define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-workspace-symbol)
 
-  ;:config
-  ;(define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-workspace-symbol)
-
-  :hook
-  (python-mode . lsp)
-  (c++-mode . lsp)
-  (c-mode . lsp)
-  )
+    :hook
+    (python-mode . lsp)
+    (c++-mode . lsp)
+    (c-mode . lsp)
+    )
 
 
-(use-package lsp-ui
-  :ensure t
-  :config
-  (setq
-   lsp-ui-peek-enable t
-   )
+  (use-package lsp-ui
+    :ensure t
+    :config
+    (setq
+     lsp-ui-peek-enable t
+     )
 
-  :hook
-  (lsp-mode . lsp-ui-mode)
-  )
+    :hook
+    (lsp-mode . lsp-ui-mode)
+    )
 #+END_SRC
 
 

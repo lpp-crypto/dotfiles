@@ -178,15 +178,15 @@ The current line is highlighted by being of a slightly different color.
 In order to make the cursor easier to find (e.g. when new emacs windows are opened, =beacon= can help (see [[https://github.com/Malabarba/beacon][its homepage]]). It is a package (that must be installed). The following activates the corresponding global mode, and ensures that the beacon blinks whenever the emacs window or the actual window is changed.
 
 #+BEGIN_SRC emacs-lisp 
-(use-package beacon
-  :ensure t
-  :config
-  (beacon-mode)
-  (setq beacon-blink-when-window-changes t
-        beacon-blink-when-focused t
-        beacon-color "<<../setup.org:focus-color()>>"
-        beacon-size 15
-        beacon-blink-when-window-scrolls t))
+  (use-package beacon
+    :ensure t
+    :config
+    (beacon-mode)
+    (setq beacon-blink-when-window-changes t
+          beacon-blink-when-focused t
+          beacon-color "<<../setup.org:focus-color()>>"
+          beacon-size 15
+          beacon-blink-when-window-scrolls t))
 #+END_SRC
 
 ** Scripts
@@ -344,9 +344,10 @@ In order to allow the use off different colors in file vaults, it is possible to
    'after-change-major-mode-hook
    (lambda ()
      (if (boundp 'local-org-tag-faces)
-         (setopt org-tag-faces local-org-tag-faces)))
+         (setopt org-tag-faces (append org-tag-faces local-org-tag-faces))))
    )
 #+END_SRC
+
 ** Attach enhancement
 Attachments are, by default, not openable with a simple mouse click. Furthermore, the corresponding headings don't look like links. This is easily fixed by the following function which can turns a heading with an attachment into a link opening it. This is easily done by having the link execute the =org-attach-open= function.
 

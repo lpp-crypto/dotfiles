@@ -79,7 +79,7 @@ echo -n "#d9a032"
 <<setup.org:etabli_theme()>> \
     --background   "<<background-color()>>" \
     --focus        "<<focus-color()>>" \
-    --ontop        "#34854d" \
+    --ontop        "#4682b4" \
     --active       "#BBBBBB" \
     --inactive     "#707070" \
     --symbol_open  " ("      \

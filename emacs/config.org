@@ -198,40 +198,15 @@ links. It is annoying; the following gets rid of this ([[https://emacs.stackexch
 #+BEGIN_SRC emacs-lisp 
 (setq find-file-visit-truename t)
 #+END_SRC
-* TODO Projects
+* Projects
 Setup projectile
 
 #+BEGIN_SRC elisp
-  (defun get-buffers-matching-mode (mode)
-    "Returns a list of buffers where their major-mode is equal to MODE"
-    (let ((buffer-mode-matches '()))
-      (dolist (buf (buffer-list))
-        (with-current-buffer buf
-          (when (eq mode major-mode)
-            (push buf buffer-mode-matches))))
-      buffer-mode-matches))
-
-
-  (defun multi-occur-org-in-this-folder ()
-    "Show all lines matching REGEXP in buffers with this major mode."
-    (interactive)
-    (multi-occur
-     (mapcar 'find-file (directory-files "." t "[^.]+\.org$")) 
-     (car (occur-read-primary-args))))
-
-
   (defun pi2-6-find-file-in-project-or-not()
     (interactive)
     (if (boundp 'meuporg-project-name)
         (projectile-find-file)
       (call-interactively 'find-file)))
-
-  (defun pi2-6-occur-in-project-or-folder()
-    (interactive)
-    (if (boundp 'meuporg-project-name)
-        (projectile-multi-occur)
-      (multi-occur-org-in-this-folder)
-      ))
 #+END_SRC
 
 #+BEGIN_SRC elisp
@@ -394,18 +369,12 @@ Now that org-babel is setup, we can define the following function which tangles 
     (native-compile "~/.emacs.el"))
 #+END_SRC
 
-** TODO Org-Agenda
-#+BEGIN_SRC emacs-lisp
-(setopt org-agenda-files '("~/roam/projects/"))
-#+END_SRC
-
 ** Org Roam :ongoingWork:
-
 *** Capture
 The capture templates for org-roam-capture are intended to send the notes in the correct folders, and of course to populate the notes with the correct template. At this stage, =roam= has the following subdirectories:
 - projects :: Contains the meuporg-files for the ongoing projects.
-- reviews :: self explanatory. Is its own github repository.
-- library :: contains solidified knowledge. Is its own github repository.
+- reviews :: self explanatory. 
+- library :: contains solidified knowledge. 
 
 #+BEGIN_SRC emacs-lisp
 (setopt org-roam-capture-templates
@@ -477,8 +446,6 @@ The capture templates for org-roam-capture are intended to send the notes in the
 #+END_SRC
 
 ** Org links
-
-
 #+BEGIN_SRC elisp
   (setopt
    org-file-apps
@@ -507,6 +474,87 @@ The capture templates for org-roam-capture are intended to send the notes in the
         (call-interactively 'org-open-at-point)
       (call-interactively 'find-file-at-point)))
 #+END_SRC
+** Org-Agenda
+*** Setting up org-agenda files :stable:
+First, we need to specify where to look for TODO items. These are stored in org-roam files, but, in order to avoid to parse all of them (both for emacs and for myself), files that correspond to ongoing work have the corresponding tag set at the file level. Those that are finished are move to "stable", following the logic described in [[*Tags]]
+
+
+#+BEGIN_SRC emacs-lisp
+  (defun pi2-6/set-org-agenda-files ()
+    "Set org-agenda-files to be a list containing the names of the files
+  corresponding to org-roam nodes with the ongoingWork tag."
+    (interactive)
+    (setopt
+     org-agenda-files
+     (mapcar 'org-roam-node-file (seq-filter
+                                  (lambda (node)
+                                    (and
+                                          ; the node is indeed a file
+                                     (= 0 (org-roam-node-level node))
+                                          ; it is tagged "ongoingWork"
+                                     (member "ongoingWork" (org-roam-node-tags node))))
+                                  (org-roam-node-list)))))
+
+    (pi2-6/set-org-agenda-files)
+#+END_SRC
+
+    (consult-org-agenda "TODO=\"TODO\"")
+*** TODO Customizing org-agenda view :ongoingWork:
+Then, we need to configure what is displayed.
+
+The following was largely made by Claude, and it works pretty well, but fontification doesn't for some reason. Org-super-agenda doesn't seem to want to work, but having a custom view for each "type" (bullshit, project, and review) could make sense.
+
+The tag :ongoingWork: is what triggers the presence of a TODO item in the agenda list, so we remove its display by setting the =org-agenda-hide-tags-regexp= appropriately.
+
+Ressources:
+- Nicolas Rougier's configuration :: [[https://www.labri.fr/perso/nrougier/GTD/index.html]]
+
+Each agenda view is set by calling a function (e.g. =agenda=), followed by some data (e.g., tags to include), and then a list of variable/value pairs (e.g, =(org-agenda-overriding-header "reviews")= to have "reviews" override the default header of this section of the agenda).
+
+There seems to be a complication: =tags-todo= cannot display a deadline. I will have to it differently for reviews.
+
+#+BEGIN_SRC elisp
+  (defun my/org-agenda-get-file-title (file)
+    "Get #+title: from FILE."
+    (with-current-buffer (find-file-noselect file)
+      (or (cadr (assoc "TITLE" (org-collect-keywords '("title"))))
+          (file-name-nondirectory file))))
+
+  (my/org-agenda-get-file-title "~/roam/library/20251016155324-arion.org")
+
+  (defun my/org-agenda-prefix-with-title ()
+    "Return prefix with file title."
+    (let* ((file (buffer-file-name (org-base-buffer (current-buffer))))
+           (title (when file (my/org-agenda-get-file-title file))))
+      (propertize (format "%-15s" (or title "")) 'face 'bold)))
+
+  ;; (setopt org-agenda-prefix-format
+  ;;         '((agenda . "%-12:c%?-12t% s")
+  ;;           (todo . "%(my/org-agenda-prefix-with-title) %-20:b")
+  ;;           (tags . "%-12:c")
+  ;;           (search . " %i %-12:c")))
+
+   (setopt org-agenda-prefix-format
+      '((agenda . " %i %-12:c%?-12t% s")
+        (todo   . "%(my/org-agenda-prefix-with-title)")
+        (tags   . " %i %-12:c")
+        (search . " %i %-12:c")))
+
+  (setopt org-agenda-hide-tags-regexp "ongoingWork\\|review")
+
+  ;; (setopt org-agenda-custom-commands '(("n" "Agenda and all TODOs" ((agenda "") (alltodo ""))))) ; the default
+
+  (setopt org-agenda-custom-commands
+      '(("g" "Reviews"
+         ((agenda "review" ((org-agenda-overriding-header "Reviews")
+                               (org-agenda-entry-types '(:deadline))
+                               ))))))
+          
+
+#+END_SRC
+
+#+RESULTS:
+: my/org-agenda-prefix-with-title
 
 * LaTeX
 ** LSP
@@ -886,16 +934,17 @@ Now, the main function sets all the common keybindings that I use (many of which
     (pi2-6-global-set-key (kbd "C-s")   'save-buffer)
 
   					; -- meuporg
-    (pi2-6-global-set-key (kbd "C-! s") 'pi2-6-ag-string-in-project)
     (pi2-6-global-set-key (kbd "C-! d") 'xref-find-definitions-other-window)
     (pi2-6-global-set-key (kbd "C-! h") 'lsp-describe-thing-at-point)
     (pi2-6-global-set-key (kbd "C-! b") 'xref-go-back)
+    (pi2-6-global-set-key (kbd "C-! j") 'consult-outline)
     (pi2-6-global-set-key (kbd "C-! l") 'pi2-6/org-roam-find-library)
     (pi2-6-global-set-key (kbd "C-! r") 'pi2-6/org-roam-find-review)
     (pi2-6-global-set-key (kbd "C-! o") 'pi2-6/org-roam-find-other)
     (pi2-6-global-set-key (kbd "C-! m") 'pi2-6/org-roam-find-meuporg)
     (pi2-6-global-set-key (kbd "C-! c") 'org-roam-capture)
     (pi2-6-global-set-key (kbd "C-! n") 'org-roam-node-insert)
+    (pi2-6-global-set-key (kbd "C-! a") 'org-agenda)
     )
 
 
@@ -966,6 +1015,12 @@ None of the python language servers I tried handle =cython=. Neither microsoft's
 
 #+END_SRC
 ** TODO Meuporg
+** Specific tools
+#+BEGIN_SRC elisp
+  (use-package cmake-mode
+    :ensure t
+    )
+#+END_SRC
 * Wrap up
 The explicit call to =package-initialize= seems to ensure that all packages are properly downloaded if they are absent.
 

@@ -67,15 +67,17 @@
 '(org-document-title ((t (:background "#000000" :foreground "#87cefa" :height 1.8 :weight semi-bold))))
 '(org-document-info-keyword  ((t (:background "#87cefa" :foreground "#000000" :height 0.8 :weight semi-light))))
 
-'(org-block-begin-line  ((t (:background "moccasin" :foreground "Brown4" :underline (:color "#eeeee8")))))
+'(org-block-begin-line  ((t (:background "old lace" :foreground "IndianRed3" :weight semi-light :height 0.8 :box (:line-width (1 . 7) :color "old lace")))))
+
 '(org-block ((t (:background "old lace"))))
-'(org-block-end-line  ((t (:background "moccasin" :foreground "Brown4"))))
+'(org-block-end-line  ((t (:inherit 'org-block-begin-line))))
 
 '(org-verbatim ((t (:background "old lace" :foreground "chartreuse4" :weight semi-light))))
 '(org-link ((t (:foreground "midnight blue" :background "alice blue" :underline (:color "gray" :style dashes)))))
 '(org-tag  ((t (:background "#eeeee8" :foreground "steel blue" :weight semi-light :height 0.8))))
 '(org-drawer  ((t (:background "#eeeee8" :foreground "#727272" :weight semi-light :height 0.7))))
 '(org-table  ((t (:background "#eeeee8" :foreground "Purple3" :weight semi-light :height 0.9))))
+'(org-date  ((t (:background "white" :foreground "dark olive green" :height 0.9 :underline (:color "gray" :style dashes)))))
 
 '(org-headline-done ((t (:foreground "dark green" :background "#eeeee8"))))
 '(org-headline-todo ((t (:foreground "brown"))))

@@ -1,4 +1,4 @@
-(defface cyanide-num-face
+(defface structure-highlight
   '((t . (:weight bold :background "#87cefa" :foreground "#000000")))
   "A font for heading markers")
 
@@ -62,7 +62,7 @@
 '(markdown-header-face-4 ((t (:inherit 'outline-3))))
 '(markdown-inline-code-face ((t (:inherit 'org-verbatim))))
 '(markdown-code-face ((t (:inherit 'org-verbatim))))
-'(markdown-header-delimiter-face ((t (:inherit 'cyanide-num-face))))
+'(markdown-header-delimiter-face ((t (:inherit 'structure-highlight))))
 
 '(org-document-title ((t (:background "#000000" :foreground "#87cefa" :height 1.8 :weight semi-bold))))
 '(org-document-info-keyword  ((t (:background "#87cefa" :foreground "#000000" :height 0.8 :weight semi-light))))
@@ -78,6 +78,12 @@
 '(org-drawer  ((t (:background "#eeeee8" :foreground "#727272" :weight semi-light :height 0.7))))
 '(org-table  ((t (:background "#eeeee8" :foreground "Purple3" :weight semi-light :height 0.9))))
 '(org-date  ((t (:background "white" :foreground "dark olive green" :height 0.9 :underline (:color "gray" :style dashes)))))
+
+'(org-level-1 ((t (:inherit 'outline-1))))
+'(org-level-2 ((t (:inherit 'outline-2))))
+'(org-level-3 ((t (:inherit 'outline-3))))
+'(org-level-4 ((t (:inherit 'outline-4))))
+'(org-level-5 ((t (:inherit 'outline-5))))
 
 '(org-headline-done ((t (:foreground "dark green" :background "#eeeee8"))))
 '(org-headline-todo ((t (:foreground "brown"))))
@@ -157,8 +163,6 @@
 
 ) ; closing the parenthesis opened in the preamble
 
-(setopt org-num-face 'cyanide-num-face)
-
 (font-lock-add-keywords
  'python-mode
  '(; python
@@ -170,17 +174,6 @@
    ("\\(cppclass\\)[[:blank:]]+" 1 '(:inherit 'font-lock-keyword-face :background  "thistle") t)
    ("\\(extern\\)[[:blank:]]+" 1 '(:inherit 'font-lock-keyword-face :background "thistle") t)
    ("^[[:blank:]]*cdef[[:blank:]]+\\(.*\\)(.*):" 1 'font-lock-function-name-face t)))
-
-(font-lock-add-keywords
- 'LaTeX-mode
- '(
-   ("\\(\\\\.*section\\*?\\){" 1 'cyanide-num-face t)
-   ("\\(\\\\paragraph\\*?\\){" 1 'cyanide-num-face t)))
-(font-lock-add-keywords
- 'latex-mode
- '(
-   ("\\(\\\\.*section\\*?\\){" 1 'cyanide-num-face t)
-   ("\\(\\\\paragraph\\*?\\){" 1 'cyanide-num-face t)))
 
 ;;;###autoload
 (when load-file-name

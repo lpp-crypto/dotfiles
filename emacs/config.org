@@ -1,5 +1,5 @@
 #+TITLE: Emacs Configuration
-#+STARTUP: overview
+#+START U: overview
 #+SETUPFILE: ../setup.org
 #+PROPERTY: header-args  :tangle ~/.emacs.el  :noweb yes
 
@@ -198,40 +198,6 @@ links. It is annoying; the following gets rid of this ([[https://emacs.stackexch
 #+BEGIN_SRC emacs-lisp 
 (setq find-file-visit-truename t)
 #+END_SRC
-* Projects
-Setup projectile
-
-#+BEGIN_SRC elisp
-  (defun pi2-6-find-file-in-project-or-not()
-    (interactive)
-    (if (boundp 'meuporg-project-name)
-        (projectile-find-file)
-      (call-interactively 'find-file)))
-#+END_SRC
-
-#+BEGIN_SRC elisp
-    (use-package projectile
-      :ensure t
-
-      :custom
-      (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
-      (projectile-project-types nil)
-      (projectile-completion-system 'auto)
-      (projectile-require-project-root t)
-      
-      :config
-      (projectile-mode)
-      (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
-      (projectile-register-project-type
-       'meuporg-project '(".projectile")
-       :project-file ".projectile"
-       :compile "make")
-      (setq projectile-indexing-method 'native)
-      (setq projectile-enable-caching 'persistent)
-      )
-
-#+END_SRC
-
 * Org
 ** Common settings
 #+BEGIN_SRC elisp
@@ -556,6 +522,45 @@ There seems to be a complication: =tags-todo= cannot display a deadline. I will 
 #+RESULTS:
 : my/org-agenda-prefix-with-title
 
+* Projects
+Setup projectile
+
+#+BEGIN_SRC elisp
+  (defun pi2-6-find-file-in-project-or-not()
+    (interactive)
+    (if (boundp 'meuporg-project-name)
+        (projectile-find-file)
+      (call-interactively 'find-file)))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+    (use-package projectile
+      :ensure t
+
+      :custom
+      (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
+      (projectile-project-types nil)
+      (projectile-completion-system 'auto)
+      (projectile-require-project-root t)
+      
+      :config
+      (projectile-mode)
+      (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
+      (projectile-register-project-type
+       'meuporg-project '(".projectile")
+       :project-file ".projectile"
+       :compile "make")
+      (setq projectile-indexing-method 'native)
+      (setq projectile-enable-caching 'persistent)
+      )
+
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (load-file "~/dotfiles/emacs/meuporg.el")
+  ;(print org-num-face)
+  ;(print cyanide-num-face)
+#+END_SRC
 * LaTeX
 ** LSP
 Not very convincing, auctex should be all I need.

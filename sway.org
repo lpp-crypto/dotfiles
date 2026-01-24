@@ -57,13 +57,13 @@ input * {
 }
 #+END_SRC
 
-When the voyager is plugged, we instead use qwerty since the logic of the layout is inside the keyboard itself.
+# When the voyager is plugged, we instead use qwerty since the logic of the layout is inside the keyboard itself.
 
-#+BEGIN_SRC sh
-input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
-    xkb_layout us
-}
-#+END_SRC
+# #+BEGIN_SRC sh
+# input "12951:6519:ZSA_Technology_Labs_Voyager_Keyboard" {
+#     xkb_layout us
+# }
+# #+END_SRC
 
 *** Touchpad
 The touchpad must allow tap to click, scroll in the correct direction,
@@ -79,7 +79,7 @@ input type:touchpad {
 #+END_SRC
 
 * Keyboard shortcuts
-** TODO Arrows
+** Arrows
 *Add other shortcuts for small left/small right movement, etc, and have the logic to generate the shortcuts for the laptop or the keyboard*
 
 The basic configuration of the keyboard is as follows: the "mod" key is the "windows key", which happens to be called "Mod4". For the directions, I use the arrow-keys-like "i,j,k,l".
@@ -165,7 +165,7 @@ Defining a sway mode to resize containers.
 15px
 #+END_SRC
 
-#+BEGIN_SRC sh RRRr
+#+BEGIN_SRC sh 
 mode "resize" {
     # with custom arrows (laptop)
     bindsym $left resize shrink width <<sway-resize-interval>>
@@ -218,23 +218,33 @@ bindsym $mod+d focus parent
 #+END_SRC
 ** Etabli
 *** Interacting with workspaces
+The keyboard shortcuts are doubled: the first one corresponds to a regular keyboard, the second to the Voyager. They all correspond to similar positions on the layout that I use.
 #+BEGIN_SRC sh 
-bindsym $mod+eacute exec <<setup.org:etabli()>> --next_level
-bindsym $mod+ampersand exec <<setup.org:etabli()>> --previous_level
-bindsym $mod+Tab exec <<setup.org:etabli()>> --next_workspace_in_level
-bindsym $mod+p exec <<setup.org:etabli()>> --new_workspace_in_level
-bindsym $mod+o exec <<setup.org:etabli()>> --next_workspace_in_level
-bindsym $mod+u exec <<setup.org:etabli()>> --previous_workspace_in_level
+  bindsym $mod+eacute    exec <<setup.org:etabli()>> --next_level
+  bindsym $mod+Next+Ctrl exec <<setup.org:etabli()>> --next_level
+  bindsym $mod+ampersand  exec <<setup.org:etabli()>> --previous_level
+  bindsym $mod+Prior+Ctrl exec <<setup.org:etabli()>> --previous_level
+  bindsym $mod+Tab        exec <<setup.org:etabli()>> --next_workspace_in_level
+  bindsym $mod+o          exec <<setup.org:etabli()>> --next_workspace_in_level
+  bindsym $mod+Ctrl+Right exec <<setup.org:etabli()>> --next_workspace_in_level
+  bindsym $mod+u         exec <<setup.org:etabli()>> --previous_workspace_in_level
+  bindsym $mod+Ctrl+Left exec <<setup.org:etabli()>> --previous_workspace_in_level
+  bindsym $mod+p   exec <<setup.org:etabli()>> --new_workspace_in_level
 #+END_SRC
 
 *** Interacting with workspaces and bringing current window
+These are exactly the same as above (at least for my keyboard layouts), except that the Shift key is also pressed. In this case, the same movements are made and the focused window  is brought along.
 #+BEGIN_SRC sh
-bindsym $mod+1 exec <<setup.org:etabli()>> --next_level_with_window
-bindsym $mod+2 exec <<setup.org:etabli()>> --previous_level_with_window
-bindsym $mod+Shift+o exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
-bindsym $mod+Shift+Tab exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
-bindsym $mod+Shift+u exec <<setup.org:etabli()>> --previous_workspace_in_level_with_window
-bindsym $mod+Shift+p exec <<setup.org:etabli()>> --new_workspace_in_level_with_window
+  bindsym $mod+1               exec <<setup.org:etabli()>> --next_level_with_window
+  bindsym $mod+Next+Ctrl+Shift exec <<setup.org:etabli()>> --next_level_with_window
+  bindsym $mod+2                exec <<setup.org:etabli()>> --previous_level_with_window
+  bindsym $mod+Prior+Ctrl+Shift exec <<setup.org:etabli()>> --previous_level_with_window
+  bindsym $mod+Shift+o          exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
+  bindsym $mod+Shift+Tab        exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
+  bindsym $mod+Ctrl+Right+Shift exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
+  bindsym $mod+Shift+u         exec <<setup.org:etabli()>> --previous_workspace_in_level_with_window
+  bindsym $mod+Ctrl+Left+Shift exec <<setup.org:etabli()>> --previous_workspace_in_level_with_window
+  bindsym $mod+Shift+p exec <<setup.org:etabli()>> --new_workspace_in_level_with_window
 #+END_SRC
 
 *** Dmenu-based scripts
@@ -246,7 +256,7 @@ bindsym $mod+Shift+twosuperior exec <<setup.org:etabli_dmenu()>> --choose_worksp
 ** Special keys
 *** Screencap
 #+BEGIN_SRC sh
-bindsym $mod+c exec sh ~/dotfiles/scripts/screencap
+bindsym $mod+c exec zsh ~/dotfiles/scripts/screencap
 #+END_SRC
 
 *** Sound control

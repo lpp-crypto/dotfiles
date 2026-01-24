@@ -573,6 +573,11 @@ Not very convincing, auctex should be all I need.
 
   )
 #+END_SRC
+** org export
+
+#+BEGIN_SRC: elisp
+(setopt org-latex-with-hyperref nil)
+#+END_SRC
 * Input/Editing handling
 ** Auto-completion
 *** Orderless

@@ -245,6 +245,13 @@ links. It is annoying; the following gets rid of this ([[https://emacs.stackexch
                 (org-num-mode)))
   )
 #+END_SRC
+** Better ids
+#+BEGIN_SRC elisp
+(setopt org-id-ts-format "%Y-%m-%d-%a(%H:%M:%S)%N")
+(setopt org-attach-id-dir "files/")
+(setopt org-id-method 'ts)
+
+#+END_SRC
 ** Data Storage
 *** Tags
 The idea is to have mere annotations in files that are not intended to help with keeping track of projects (typically, dotfiles such as this one). These are of two types. The first documents the state of the heading:
@@ -256,15 +263,23 @@ The idea is to have mere annotations in files that are not intended to help with
 A permanent list of tags is specified first. It has to be set with =setopt=, otherwise it doesn't work.
 
 #+BEGIN_SRC elisp
-    (setopt org-tag-persistent-alist
-           '((:startgroup)
-             ("state")
-             (:grouptags)
-             ("ongoingWork" . ?o)
-             ("attentionNeeded" . ?n)
-             ("stable" . ?s)
-             ("hack" . ?h)
-             (:endgroup)))
+  (setopt org-tag-persistent-alist
+         '((:startgroup)
+           ("state")
+           (:grouptags)
+           ("ongoingWork" . ?o)
+           ("attentionNeeded" . ?n)
+           ("stable" . ?s)
+           ("hack" . ?h)
+           (:endgroup)
+           (:startgroup)
+           ("type")
+           (:grouptags)
+           ("paper" . ?a)
+           ("people" . ?e)
+           ("project" . ?r)
+           (:endgroup)
+           ))
 #+END_SRC
 
 Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It simply describes which face to use for each of these tags.
@@ -289,6 +304,20 @@ In order to allow the use off different colors in file vaults, it is possible to
    )
 #+END_SRC
 
+*** Opening image folders
+It is nice to attach entire collections of pictures (e.g. to store and tag travel photos). Then, these shouldn't be attached and opened one by one, but instead folder by folder, each folder being opened as a slideshow. The =xsiv= program does just that, and is easy to script. The following functions grabs all the pictures in an attach directory and starts a slide show with them.
+
+The options are
+- r :: to recursively search subdirectories,
+- S 3 :: to have a slide show where each picture remains for 3s before switching to the next,
+- sf :: to have the pictures fill the available space without having their geometry altered.
+
+#+BEGIN_SRC elisp
+  (defun pi2-6/open-slide-show()
+    "Assuming the attached data is a folder containing pictures, starts a slideshow with all of those."
+    (shell-command (format "sxiv -r -S 3 -p -sf '%s' &" (org-attach-dir))))
+#+END_SRC 
+
 ** Attach enhancement
 Attachments are, by default, not openable with a simple mouse click. Furthermore, the corresponding headings don't look like links. This is easily fixed by the following function which can turns a heading with an attachment into a link opening it. This is easily done by having the link execute the =org-attach-open= function.
 
@@ -297,14 +326,48 @@ Then, this function is added as an advice to =org-attach= so that it is done aut
 It doesn't work perfectly if there is a ':' in the heading, but it's rare enough and easy enough to fix by hand that I don't care.
 
 #+BEGIN_SRC elisp
-  (defun pi2-6/attach-make-link()
+  (defun pi2-6/attach-make-link-open()
     (interactive)
     (end-of-line)
     (re-search-backward "^\\(\\*+\\) +\\([^:]+\\) +:")
     (replace-match "\\1 [[elisp:(org-attach-open)][\\2]]  :"))
 
+  (defun pi2-6/attach-make-link-slides()
+    (interactive)
+    (end-of-line)
+    (re-search-backward "^\\(\\*+\\) +\\([^:]+\\) +:")
+    (replace-match "\\1 [[elisp:(pi2-6/open-slide-show)][\\2]]  :"))
+
+
+  (defun pi2-6/attach-make-link()
+    (if (member "images" (org-get-tags))
+        (pi2-6/attach-make-link-slides)
+      (pi2-6/attach-make-link-open)))
+
   (advice-add 'org-attach :after #'pi2-6/attach-make-link)
 #+END_SRC
+
+We also need the following to be able to open attachments with better-ids.
+
+#+BEGIN_SRC elisp
+
+(defun pi2-6/org-attach-id-readable-format (id)
+  "Translate an ID based on a readable timestamp to a folder-path.
+Useful way of translation if ID is not generated based on ISO8601
+timestamp, but on something easier to read where the month is separated
+from the year.  Splits the attachment folder hierarchy into year-month,
+the rest; the leading character of the rest being dropped."
+  (and (< 10 (length id))
+       (format "%s/%s"
+               (substring id 0 7)
+               (substring id 8))))
+
+(setopt org-attach-id-to-path-function-list
+        '(pi2-6/org-attach-id-readable-format
+          org-attach-id-uuid-folder-format
+          org-attach-id-ts-folder-format
+          org-attach-id-fallback-folder-format))
+ #+END_SRC
 ** Org babel
 We need to enable the languages in babel. This is done as follows ([[https://emacs-orgmode.gnu.narkive.com/hmJIUIeQ/o-bug-org-babel-execute-src-block-no-org-babel-execute-function-for-python][source]]).
 #+BEGIN_SRC emacs-lisp
@@ -561,7 +624,6 @@ Setup projectile
   ;(print org-num-face)
   ;(print cyanide-num-face)
 #+END_SRC
-* LaTeX
 ** Org export
 The default style when exporting org to LATEX is very ugly; the following makes it better by removing ugly boxes and ensuring that the table of content does not interfere with the remainder of the content.
 #+BEGIN_SRC elisp
@@ -592,11 +654,7 @@ Not very convincing, auctex should be all I need.
 
   )
 #+END_SRC
-** org export
 
-#+BEGIN_SRC: elisp
-(setopt org-latex-with-hyperref nil)
-#+END_SRC
 * Input/Editing handling
 ** Auto-completion
 *** Orderless

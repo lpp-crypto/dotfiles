@@ -474,6 +474,35 @@ The capture templates for org-roam-capture are intended to send the notes in the
     (org-roam-db-autosync-enable))
 #+END_SRC
 
+** Vulpea
+(vulpea-db-sync-full-scan)
+#+BEGIN_SRC elisp
+  (use-package vulpea
+    :ensure t
+    :config
+    (setopt vulpea-db-sync-directories '("~/roam/"))
+    (setopt vulpea-default-notes-directory "~/roam/")
+    (setopt vulpea-db-sync-external-method 'auto)
+    (vulpea-db-autosync-mode +1))
+
+  (defun pi2-6/find-paper()
+    "Find a paper within the vulpea/roam directory"
+    (interactive)
+    (vulpea-visit (vulpea-select-from "Select paper" (vulpea-db-query-by-tags-every '("paper")))))
+
+#+END_SRC
+
+** Capture
+#+BEGIN_SRC elisp
+  (defun pi2-6/capture-paper(title)
+    "Capture a paper"
+     (interactive "sPaper title: ")
+     (vulpea-visit (vulpea-create title
+                                  "papers/${timestamp}_${slug}.org"
+                                  :body "* Notes"
+                                  :tags '("paper"))))
+#+END_SRC
+
 ** Org links
 #+BEGIN_SRC elisp
   (setopt
@@ -486,7 +515,12 @@ The capture templates for org-roam-capture are intended to send the notes in the
      ("\\.pdf::\\([a-zA-Z0-9,.; ]+\\)?" . "evince %s -l \"%1\"")
      ("\\.pdf" . "evince %s")
      ("\\.mp4" . "vlc %s")
-     ("\\.webm" . "vlc %s")
+     ("\\.doc" . "libreoffice %s")
+     ("\\.docx" . "libreoffice %s")
+     ("\\.xls" . "libreoffice %s")
+     ("\\.xlsx" . "libreoffice %s")
+     ("\\.ppt" . "libreoffice %s")
+     ("\\.pptx" . "libreoffice %s")
      (auto-mode . emacs)
      ))
 
@@ -1029,6 +1063,7 @@ Now, the main function sets all the common keybindings that I use (many of which
     (pi2-6-global-set-key (kbd "C-! r") 'pi2-6/org-roam-find-review)
     (pi2-6-global-set-key (kbd "C-! o") 'pi2-6/org-roam-find-other)
     (pi2-6-global-set-key (kbd "C-! m") 'pi2-6/org-roam-find-meuporg)
+    (pi2-6-global-set-key (kbd "C-! f") 'pi2-6/open-at-point)
     (pi2-6-global-set-key (kbd "C-! c") 'org-roam-capture)
     (pi2-6-global-set-key (kbd "C-! n") 'org-roam-node-insert)
     (pi2-6-global-set-key (kbd "C-! a") 'org-agenda)
@@ -1050,11 +1085,15 @@ much better than the GNU style in my opinion.
 We then set the offset to 4 characters, and remove all tabs.
 
 #+BEGIN_SRC elisp
-(setq c-default-style "bsd")
-(setq-default c-basic-offset 4)
-(setq-default indent-tabs-mode nil)
+(setopt c-default-style "bsd")
+(setopt c-basic-offset 4)
+(setopt indent-tabs-mode nil)
 #+END_SRC
-
+*** Python
+For python, we only need to set the value of the default indent.
+#+BEGIN_SRC elisp
+(setopt python-indent-offset 4)
+#+END_SRC
 ** TODO LSP
 
 #+BEGIN_SRC elisp
@@ -1101,16 +1140,23 @@ None of the python language servers I tried handle =cython=. Neither microsoft's
 
 
 #+END_SRC
-** TODO Meuporg
 ** Specific tools
+*** Cmake
 #+BEGIN_SRC elisp
   (use-package cmake-mode
     :ensure t
     )
 #+END_SRC
-* Wrap up
-The explicit call to =package-initialize= seems to ensure that all packages are properly downloaded if they are absent.
+*** LaTeX
+Auctex really simplifies handling LaTeX projects. I take this opportunity to activate two more modes when a LaTeX file is opened:
+- TeX-source-correlate-mode :: allows backward searches whereby clicking on a spot on a pdf file opens a buffer containing the corresponding LaTeX code, and
+- reftex-mode :: a sophisticated minor mode which handles references, both in-file ones (\ref) and external citations (\cite). Also provides the command =reftex-toc= (bound to =C-c == by default) which enables a quick navigation within a document structure independently from the way it is split into distinct LaTeX files.
 
-#+BEGIN_SRC elisp :tangle no
-  (package-initialize)
+#+BEGIN_SRC elisp
+  (use-package tex
+    :ensure auctex
+    
+    :hook
+    ((LaTeX-mode . TeX-source-correlate-mode)
+     (LaTeX-mode . reftex-mode)))
 #+END_SRC

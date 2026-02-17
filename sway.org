@@ -279,7 +279,7 @@ The following sets the wallpaper and the gap between the windows. The
 wallpaper scaling style must be set; =strech= works with wallpapers that
 are too small for the screen.
 #+BEGIN_SRC sh 
-output * bg ~/dotfiles/figures/rivendell.jpg stretch
+output * bg ~/dotfiles/figures/winter-ruin.jpeg stretch
 gaps inner 6
 #+END_SRC
 

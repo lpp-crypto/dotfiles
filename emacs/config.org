@@ -189,6 +189,11 @@ In order to make the cursor easier to find (e.g. when new emacs windows are open
           beacon-blink-when-window-scrolls t))
 #+END_SRC
 
+*** Mode line
+Mock up:
+
+Project-short-name | folder/file (or shortened title for notes) \hfill (line:col)
+
 ** Scripts
 In order for this system to work well, the scripts in [[./helper-scripts/]] need to be copied somewhere in the path, execution rights added, and extension removed.
 ** File Handling
@@ -208,42 +213,48 @@ links. It is annoying; the following gets rid of this ([[https://emacs.stackexch
                 org-image-actual-width '(300)
                 org-tags-column 10
                 org-link-elisp-confirm-function nil
+                org-ellipsis "⤵"
               )
 #+END_SRC
 
+It is possible to ensure that LaTeX is always rendered by setting =org-startup-with-latex-preview= to =t=, but this has a significant time penalty. Better not to.
+Requiring =org-mouse= ensures that we can fold/unfold org-headings by clicking on the markers.
 
 #+BEGIN_SRC elisp
-;; (use-package org-superstar
-;;   :ensure t
-;;   )
+  ;; (use-package org-superstar
+  ;;   :ensure t
+  ;;   )
 
-(use-package org-fragtog
-  :ensure t
+  (use-package org-fragtog
+    :ensure t
 
-  :after org
+    :after org
 
-  :custom
-  (org-startup-with-latex-preview t)
+    :custom
+    (org-startup-with-latex-preview nil)
 
-  :custom
-  (org-format-latex-options
-   (plist-put org-format-latex-options :scale 1.5)
-   (plist-put org-format-latex-options :foreground 'auto)
-   (plist-put org-format-latex-options :background 'auto))
-  )
+    :custom
+    (org-format-latex-options
+     (plist-put org-format-latex-options :scale 1.5)
+     (plist-put org-format-latex-options :foreground 'auto)
+     (plist-put org-format-latex-options :background 'auto))
+    )
 
-(use-package org
-  :ensure t
-  
-  :mode
-  (("\\.org$" . org-mode))
-  
-  :hook
-  (org-mode . (lambda ()
-                (org-fragtog-mode)
-                ;(org-superstar-mode)
-                (org-num-mode)))
-  )
+  (use-package org
+    :ensure t
+    
+    :mode
+    (("\\.org$" . org-mode))
+    
+    :hook
+    (org-mode . (lambda ()
+                  (org-fragtog-mode)
+                  ;(org-superstar-mode)
+                  (org-num-mode)))
+    )
+
+  (require 'org-mouse)
+  (require 'org-attach)
 #+END_SRC
 ** Better ids
 #+BEGIN_SRC elisp
@@ -279,17 +290,48 @@ A permanent list of tags is specified first. It has to be set with =setopt=, oth
            ("people" . ?e)
            ("project" . ?r)
            (:endgroup)
+           (:startgrouptag)
+           ("mine")
+           ("sok")
+           (:endgrouptag)
            ))
 #+END_SRC
 
 Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It simply describes which face to use for each of these tags.
 
 #+BEGIN_SRC elisp
-(setopt org-tag-faces
-        '(("ongoingWork" . (:background "yellow" :foreground "dim gray"))
-          ("attentionNeeded" . (:background "orange" :foreground "dim gray"))
-          ("stable" . (:foreground "chartreuse2"))
-          ("hack" . (:foreground "tomato"))))
+  (setopt org-tag-faces
+          '(("ongoingWork" . (:background "yellow" :foreground "dim gray"))
+            ("attentionNeeded" . (:background "orange" :foreground "dim gray"))
+            ("stable" . (:foreground "chartreuse2"))
+            ("hack" . (:foreground "tomato"))
+
+            
+            ("mine" . (:background "black" :foreground "white" :distant-foreground "black"))
+            ("sok" . (:background "white" :foreground "red"))
+
+            ("sym" . (:background "brown" :foreground "white" :distant-foreground "brown" ))
+            ("stap" . (:background "dark orange" :foreground "white" :distant-foreground "dark orange"))
+            ("light" . (:background "sienna" :foreground "white" :distant-foreground  "sienna"))
+            
+            ("mode" . (:background "magenta" :foreground "black"))
+
+            ("mpc" . (:background "rosy brown" :foreground "black"))
+            ("zk" . (:background "coral" :foreground "black"))
+            ("fhe" . (:background "tomato" :foreground "black"))
+            ("tfhe" . (:background "light coral" :foreground "black"))
+            
+            ("sbox" . (:background "dark violet" :foreground "white" :distant-foreground "dark violet"))
+            ("apn" . (:background "cyan" :foreground "black"))
+            ("math" . (:background "deep sky blue" :foreground "black"))
+            ("ccz" . (:background "steel blue" :foreground "white" :distant-foreground "steel blue"))
+            
+            ("posso" . (:background "chartreuse" :foreground "black"))
+            ("differential" . (:background "green" :foreground "white" :distant-foreground "green" ))
+            ("linear" . (:background "lime green" :foreground "black"))
+            ("subspace" . (:background "medium spring green" :foreground "black"))
+            
+            ))
 
 #+END_SRC
 
@@ -314,7 +356,8 @@ The options are
 
 #+BEGIN_SRC elisp
   (defun pi2-6/open-slide-show()
-    "Assuming the attached data is a folder containing pictures, starts a slideshow with all of those."
+    "Assuming the attached data is a folder containing pictures,
+  starts a slideshow with all of those."
     (shell-command (format "sxiv -r -S 3 -p -sf '%s' &" (org-attach-dir))))
 #+END_SRC 
 
@@ -398,14 +441,14 @@ Now that org-babel is setup, we can define the following function which tangles 
     (native-compile "~/.emacs.el"))
 #+END_SRC
 
-** Org Roam :ongoingWork:
+** Org :deactivated:
 *** Capture
 The capture templates for org-roam-capture are intended to send the notes in the correct folders, and of course to populate the notes with the correct template. At this stage, =roam= has the following subdirectories:
 - projects :: Contains the meuporg-files for the ongoing projects.
 - reviews :: self explanatory. 
 - library :: contains solidified knowledge. 
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (setopt org-roam-capture-templates
       '(
         ("p" "projects" plain (file "~/roam/templates/project.org")
@@ -423,7 +466,7 @@ The capture templates for org-roam-capture are intended to send the notes in the
 
 *** Custom opening functions
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp  :tangle no
   (defun pi2-6/org-roam-find-library ()
       (interactive)
       (org-roam-node-find
@@ -455,14 +498,16 @@ The capture templates for org-roam-capture are intended to send the notes in the
 #+END_SRC
 
 *** use-package
-#+BEGIN_SRC elisp
+The parameter =org-roam-completion-everywhere= means that every string can potentially be auto-completed into an org-roam link. Since most common words appear somewhere in the title of a note, this gets very annoying very quickly: best to disable it.
+
+#+BEGIN_SRC elisp  :tangle no
   (use-package org-roam
     :ensure t
     :init
     (setopt org-roam-v2-ack t)
     :custom
     (org-roam-directory (file-truename "~/roam/"))
-    (org-roam-completion-everywhere t)
+    (org-roam-completion-everywhere nil)
     (org-roam-capture-templates
      '(("d" "default" plain
         "%?"
@@ -485,22 +530,83 @@ The capture templates for org-roam-capture are intended to send the notes in the
     (setopt vulpea-db-sync-external-method 'auto)
     (vulpea-db-autosync-mode +1))
 
+#+END_SRC
+
+** Capture
+Capturing information for the roam/vulpea directory is handled "by hand" as I couldn't get =org-capture= to do what I wanted. On the other hand, it is very easy to write dedicated =vulpea= creation functions, the specific choice of which to call then being decided using =transient=.
+#+BEGIN_SRC elisp
+  (defun pi2-6/capture-paper(title)
+      "Capture a paper"
+       (interactive "sPaper title: ")
+       (vulpea-visit (vulpea-create title
+                                    "papers/${timestamp}_${slug}.org"
+                                    :tags '("paper"))))
+
+    (defun pi2-6/capture-library(title)
+      "Capture a note for the library"
+       (interactive "sNote title: ")
+       (vulpea-visit (vulpea-create title
+                                    "library/${timestamp}_${slug}.org"
+                                    :body "* Notes"
+                                    :tags '("note"))))
+
+      (defun pi2-6/capture-project(title)
+      "Capture a note for a project"
+       (interactive "sProject title: ")
+       (vulpea-visit (vulpea-create title
+                                    "projects/${timestamp}_${slug}.org"
+                                    :head "#+MEUPFOLDER: "
+                                    :body "* Diary  :noexport:"
+                                    :tags '("ongoingWork"))))
+
+      (defun pi2-6/capture-review(title)
+      "Capture a review"
+       (interactive "sReviewed paper title: ")
+       (vulpea-visit (vulpea-create (format "%s (review)" title)
+                                    "reviews/${timestamp}_${slug}.org"
+                                    :body "* ${title} :review:ongoingWork: \nDEADLINE: \n:PROPERTIES:\n:ID: %(org-id-get-create)\n:END:\n* Files\n** main pdf\n* Diary  :noexport:")))
+#+END_SRC
+
+#+RESULTS:
+: pi2-6/capture-review
+
+#+BEGIN_SRC elisp
+  
+   (defun pi2-6/find-ongoingWork()
+     "Selects a vulpea note with the ongoingWork tag"
+     (interactive)
+     (vulpea-visit (vulpea-select-from "to visit: "
+                                       (vulpea-db-query-by-tags-some '("ongoingWork")))))
+
   (defun pi2-6/find-paper()
     "Find a paper within the vulpea/roam directory"
     (interactive)
     (vulpea-visit (vulpea-select-from "Select paper" (vulpea-db-query-by-tags-every '("paper")))))
 
+  
+  (defun pi2-6/find-attachment()
+    "Find an attachment within the vulpea/roam directory"
+    (interactive)
+    (vulpea-visit (vulpea-select-from "Select attachment" (vulpea-db-query-by-tags-every '("attach")))))
+
+  
 #+END_SRC
 
-** Capture
-#+BEGIN_SRC elisp
-  (defun pi2-6/capture-paper(title)
-    "Capture a paper"
-     (interactive "sPaper title: ")
-     (vulpea-visit (vulpea-create title
-                                  "papers/${timestamp}_${slug}.org"
-                                  :body "* Notes"
-                                  :tags '("paper"))))
+  The selection function is then a simple =transient= function.
+
+  #+BEGIN_SRC elisp
+     (require 'transient)
+
+     (transient-define-prefix pi2-6/vulpea-action()
+       "What to capture?"
+       [("f" "[f]find" vulpea-find)
+        ("g" "find on[g]oingWork" pi2-6/find-ongoingWork)
+        ("p" "new [p]aper" pi2-6/capture-paper)
+        ("l" "new [l]ibrary entry" pi2-6/capture-library)
+        ("o" "new pr[o]ject entry" pi2-6/capture-project)
+        ("r" "new [r]eview" pi2-6/capture-review)
+        ("i" "grab l[i]nk" vulpea-insert)
+         ])
 #+END_SRC
 
 ** Org links
@@ -517,6 +623,7 @@ The capture templates for org-roam-capture are intended to send the notes in the
      ("\\.mp4" . "vlc %s")
      ("\\.doc" . "libreoffice %s")
      ("\\.docx" . "libreoffice %s")
+     ("\\.ods" . "libreoffice %s")
      ("\\.xls" . "libreoffice %s")
      ("\\.xlsx" . "libreoffice %s")
      ("\\.ppt" . "libreoffice %s")
@@ -532,15 +639,19 @@ The capture templates for org-roam-capture are intended to send the notes in the
             (wl . wl-other-frame)))
 
   (defun pi2-6/open-at-point()
+    "Tries to open an org-link at point, and if it fails then tries to
+   open the file at point."
     (interactive)
-    (if (derived-mode-p 'org-mode)
+    (condition-case nil 
         (call-interactively 'org-open-at-point)
-      (call-interactively 'find-file-at-point)))
+      (error (find-file-at-point))))
 #+END_SRC
+
 ** Org-Agenda
 *** Setting up org-agenda files :stable:
 First, we need to specify where to look for TODO items. These are stored in org-roam files, but, in order to avoid to parse all of them (both for emacs and for myself), files that correspond to ongoing work have the corresponding tag set at the file level. Those that are finished are move to "stable", following the logic described in [[*Tags]]
 
+The code exracting ongoing work from the vulpea/roam folder is easy to write.
 
 #+BEGIN_SRC emacs-lisp
   (defun pi2-6/set-org-agenda-files ()
@@ -549,16 +660,9 @@ First, we need to specify where to look for TODO items. These are stored in org-
     (interactive)
     (setopt
      org-agenda-files
-     (mapcar 'org-roam-node-file (seq-filter
-                                  (lambda (node)
-                                    (and
-                                          ; the node is indeed a file
-                                     (= 0 (org-roam-node-level node))
-                                          ; it is tagged "ongoingWork"
-                                     (member "ongoingWork" (org-roam-node-tags node))))
-                                  (org-roam-node-list)))))
+     (-uniq (mapcar 'vulpea-note-path (vulpea-db-query-by-tags-every '("ongoingWork"))))))
 
-    (pi2-6/set-org-agenda-files)
+  (pi2-6/set-org-agenda-files)
 #+END_SRC
 
     (consult-org-agenda "TODO=\"TODO\"")
@@ -576,7 +680,7 @@ Each agenda view is set by calling a function (e.g. =agenda=), followed by some 
 
 There seems to be a complication: =tags-todo= cannot display a deadline. I will have to it differently for reviews.
 
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :tangle no
   (defun my/org-agenda-get-file-title (file)
     "Get #+title: from FILE."
     (with-current-buffer (find-file-noselect file)
@@ -1031,7 +1135,7 @@ Now, the main function sets all the common keybindings that I use (many of which
     (pi2-6-global-set-key (kbd "C-<next>")  'next-buffer)
     (pi2-6-global-set-key (kbd "C-r")       'revert-buffer)
     (pi2-6-global-set-key (kbd "C-S-b")     'ibuffer)
-    ;(pi2-6-global-set-key (kbd "C-b")       'bu)
+    (pi2-6-global-set-key (kbd "C-b")       'consult-buffer)
 
 
   					; -- interacting with files
@@ -1047,6 +1151,7 @@ Now, the main function sets all the common keybindings that I use (many of which
     (pi2-6-global-set-key (kbd "M-Q") 'delete-window)
     (pi2-6-global-set-key (kbd "M-s") 'other-window)
     (pi2-6-global-set-key (kbd "M-S") 'delete-other-windows)
+    (pi2-6-global-set-key (kbd "C-b") 'consult-buffer)
 
 
   					; -- interacting with frames
@@ -1059,14 +1164,12 @@ Now, the main function sets all the common keybindings that I use (many of which
     (pi2-6-global-set-key (kbd "C-! h") 'lsp-describe-thing-at-point)
     (pi2-6-global-set-key (kbd "C-! b") 'xref-go-back)
     (pi2-6-global-set-key (kbd "C-! j") 'consult-outline)
-    (pi2-6-global-set-key (kbd "C-! l") 'pi2-6/org-roam-find-library)
-    (pi2-6-global-set-key (kbd "C-! r") 'pi2-6/org-roam-find-review)
-    (pi2-6-global-set-key (kbd "C-! o") 'pi2-6/org-roam-find-other)
-    (pi2-6-global-set-key (kbd "C-! m") 'pi2-6/org-roam-find-meuporg)
-    (pi2-6-global-set-key (kbd "C-! f") 'pi2-6/open-at-point)
-    (pi2-6-global-set-key (kbd "C-! c") 'org-roam-capture)
+    (pi2-6-global-set-key (kbd "C-! o") 'pi2-6/open-at-point)
+    (pi2-6-global-set-key (kbd "C-! c") 'pi2-6/vulpea-action)
+    (pi2-6-global-set-key (kbd "C-! f") 'vulpea-find)
     (pi2-6-global-set-key (kbd "C-! n") 'org-roam-node-insert)
     (pi2-6-global-set-key (kbd "C-! a") 'org-agenda)
+    (pi2-6-global-set-key (kbd "C-! !") 'pi2-6/dashboard)
     )
 
 
@@ -1159,4 +1262,139 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
     :hook
     ((LaTeX-mode . TeX-source-correlate-mode)
      (LaTeX-mode . reftex-mode)))
+#+END_SRC
+* Dashboard
+
+#+BEGIN_SRC elisp
+  (require 'widget)
+  (require 'org)
+#+END_SRC
+
+** General Helper Functions
+#+BEGIN_SRC elisp
+  (defun pi2-6/pretty-tags(tags)
+    (let ((double-dots (propertize ":" 'face 'org-tag)))
+      (s-concat
+       (mapconcat
+        (lambda(tag)
+          (format "%s%s" double-dots (propertize tag 'face (list (org-get-tag-face tag) 'org-tag))))
+        tags)
+       (if tags double-dots ""))))
+
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  (defun pi2-6/create-file-link(title path tags)
+    "Create a widget link to a given file with pretty tags."
+    (insert "  ")
+    (widget-create 'link
+                   :tag (s-concat (propertize "[→]" 'face 'org-link) " " title)
+                   :button-prefix ""
+                   :button-suffix ""
+                   :button-face '(:weight 'normal)
+                   :action `(lambda (widget &optional event)
+                              (find-file ,path)))
+    (insert "  " (pi2-6/pretty-tags tags) "\n"))
+
+
+  (defun pi2-6/dashboard-header (title)
+    "Insert a fontified header."
+    (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-2) "\n"))
+
+#+END_SRC
+
+** Generating Specific Content
+*** Ongoing projects
+#+BEGIN_SRC elisp
+  (defun pi2-6/create-project-link-widget(proj)
+    (let ((proj-tags (remove "ongoingWork" (vulpea-note-tags proj)))
+          (proj-title (vulpea-note-title proj))
+          (proj-path (vulpea-note-path proj)))
+      (pi2-6/create-file-link proj-title proj-path proj-tags)))      
+
+
+  (defun pi2-6/dashboard-ongoing ()
+    "Creates a list of widget links by pulling all the notes tagged
+     ongoingWork."
+    (pi2-6/dashboard-header "Ongoing Work")
+    (mapcar 'pi2-6/create-project-link-widget
+            (vulpea-db-query-by-tags-every '("ongoingWork"))))
+
+#+END_SRC
+
+*** Dotfiles
+#+BEGIN_SRC elisp
+  (defun pi2-6/dashboard-dotfiles()
+    "Inserts a section linking to the dotfiles."
+    (pi2-6/dashboard-header ".files")
+    (pi2-6/create-file-link "emacs config" "~/dotfiles/emacs/config.org" nil)
+    (pi2-6/create-file-link "SWAY config" "~/dotfiles/sway.org" nil)
+    (pi2-6/create-file-link "Scripts" "~/dotfiles/scripts.org" nil))
+#+END_SRC
+
+*** Reviews
+#+BEGIN_SRC elisp
+  (defun pi2-6/dashboard-reviews ()
+    "Inserts widgets to access reviews."
+    (pi2-6/dashboard-header "Reviews")
+    
+    )
+#+END_SRC
+
+*** Widgets
+#+BEGIN_SRC elisp
+    (defun pi2-6/dashboard-papers-by-tags ()
+      "Creates a list of widget links by pullin all the notes tagged"
+      (widget-create 'editable-field
+                     :size 30
+                     :format "Find papers with tags: %v "
+                     :value "bwo"
+                     :notify (lambda (widget &rest ignore)
+                               (setq pi2-6/dashboard-paper-query-tag (widget-value widget))))
+      (widget-create 'push-button 
+                     :notify (lambda (&rest ignore)
+                               (vulpea-visit
+                                (vulpea-select-from
+                                 (format "Papers with tag %s" pi2-6/dashboard-paper-query-tag)
+                                 (vulpea-db-query-by-tags-every
+                                  (cons "paper"
+                                          (split-string pi2-6/dashboard-paper-query-tag ":"))))))
+                     "find")
+      (insert "\n"))
+
+#+END_SRC
+
+** Main Function
+#+BEGIN_SRC elisp
+  (defun pi2-6/dashboard ()
+    "Create a landing page dashboard."
+    (interactive)
+    (let ((buf (get-buffer-create "*Dashboard*")))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (insert (propertize "Dashboard" 'face 'org-document-title))
+          (insert "\n")
+
+          (pi2-6/dashboard-ongoing)
+          
+          (pi2-6/dashboard-reviews)
+
+          (insert "\n\n")
+
+          (pi2-6/dashboard-dotfiles)
+
+          (insert "\n\n")
+          
+          (pi2-6/dashboard-header "Vulpea/Roam")
+          
+          (pi2-6/dashboard-papers-by-tags)
+          
+          (insert "\n\n")
+          
+
+          (use-local-map widget-keymap)
+          (widget-setup)
+          (switch-to-buffer buf)
+          ))))
 #+END_SRC

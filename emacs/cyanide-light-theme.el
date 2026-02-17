@@ -77,7 +77,8 @@
 '(org-tag  ((t (:background "#eeeee8" :foreground "steel blue" :weight semi-light :height 0.8))))
 '(org-drawer  ((t (:background "#eeeee8" :foreground "#727272" :weight semi-light :height 0.7))))
 '(org-table  ((t (:background "#eeeee8" :foreground "Purple3" :weight semi-light :height 0.9))))
-'(org-date  ((t (:background "white" :foreground "dark olive green" :height 0.9 :underline (:color "gray" :style dashes)))))
+'(org-date  ((t (:background "white" :foreground "dark olive green" :height 0.9 :underline (:color "gray" :style dashes)))))  
+'(org-ellipsis  ((t (:background "#87cefa" :foreground "#000000" :height 0.7))))
 
 '(org-level-1 ((t (:inherit 'outline-1))))
 '(org-level-2 ((t (:inherit 'outline-2))))

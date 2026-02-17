@@ -1,4 +1,4 @@
-#!/usr/bin/zsh
+#!/usr/bin/sh
 
 TARGET_DIR=$(~/.local/bin/etabli_board -n dir -q)
 if [[ "$TARGET_DIR" == "" ]]; then

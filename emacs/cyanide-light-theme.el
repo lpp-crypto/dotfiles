@@ -34,7 +34,7 @@
 '(custom-documentation-face ((t (:background "cyanide"))))
 
 '(mode-line ((t (:background "burlywood3" :foreground "wheat1"))))
-'(mode-line-buffer-id ((t (:background "dark slate gray" :foreground "wheat1"))))
+'(mode-line-buffer-id ((t (:weight bold :background "#000000" :foreground "#87cefa"))))
 '(mode-line-mousable ((t (:background "dark slate gray" :foreground "wheat1"))))
 '(mode-line-mousable-minor-mode ((t (:background "dark slate gray" :foreground "wheat1"))))
 
@@ -50,9 +50,9 @@
 
 '(cyanide-class-name-face ((t (:background "lemon chiffon" :foreground "dark orange" :weight bold :height 1.3))))
 
-'(outline-1 ((t (:background "#eeeee8" :foreground "#96441f" :height 1.5 :weight extra-bold :box (:line-width (12 . 12) :color "#eeeee8")))))
-'(outline-2 ((t (:background "#eeeee8" :foreground "#79432c" :height 1.3 :weight semi-bold :box (:line-width (9 . 9) :color "#eeeee8")))))
-'(outline-3 ((t (:background "#eeeee8" :foreground "#653c29" :height 1.1 :weight semi-bold :box (:line-width (6 . 6) :color "#eeeee8")))))
+'(outline-1 ((t (:background "#eeeee8" :foreground "#96441f" :height 1.8 :weight extra-bold :box (:line-width (14 . 14) :color "#eeeee8")))))
+'(outline-2 ((t (:background "#eeeee8" :foreground "#79432c" :height 1.5 :weight bold :box (:line-width (10 . 10) :color "#eeeee8")))))
+'(outline-3 ((t (:background "#eeeee8" :foreground "#653c29" :height 1.2 :weight semi-bold :box (:line-width (6 . 6) :color "#eeeee8")))))
 '(outline-4 ((t (:background "#eeeee8" :foreground "#513428" :height 1.05 :weight semi-bold :box (:line-width (3 . 3) :color "#eeeee8")))))
 '(outline-5 ((t (:background "#eeeee8" :foreground "#513428" :height 1.0 :weight semi-bold :box (:line-width (2 . 2) :color "#eeeee8")))))
 
@@ -64,7 +64,7 @@
 '(markdown-code-face ((t (:inherit 'org-verbatim))))
 '(markdown-header-delimiter-face ((t (:inherit 'structure-highlight))))
 
-'(org-document-title ((t (:background "#000000" :foreground "#87cefa" :height 1.8 :weight semi-bold))))
+'(org-document-title ((t (:background "#000000" :foreground "#87cefa" :height 2.0 :weight semi-bold))))
 '(org-document-info-keyword  ((t (:background "#87cefa" :foreground "#000000" :height 0.8 :weight semi-light))))
 
 '(org-block-begin-line  ((t (:background "old lace" :foreground "IndianRed3" :weight semi-light :height 0.8 :box (:line-width (1 . 7) :color "old lace")))))

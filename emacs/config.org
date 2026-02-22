@@ -190,9 +190,9 @@ In order to make the cursor easier to find (e.g. when new emacs windows are open
 #+END_SRC
 
 *** Mode line
-Mock up:
+The mode line is based on the [[https://gitlab.com/jessieh/mood-line][mood-line]] package. The default appearance is quite good in my opinion, but we can do better.
 
-Project-short-name | folder/file (or shortened title for notes) \hfill (line:col)
+The default setup is essentially straight from the documentation.
 
 #+BEGIN_SRC elisp
   (use-package mood-line
@@ -204,8 +204,15 @@ Project-short-name | folder/file (or shortened title for notes) \hfill (line:col
     ;; Use pretty Fira Code-compatible glyphs
     :custom
     (mood-line-glyph-alist mood-line-glyphs-fira-code))
+#+END_SRC
 
+We then improve upon the default appearance. The idea is to display more information than just the basic buffer name: the document title in an org document, or the full path to a file if the buffer corresponds to a file. Then, said path should be relative to a project root when relevant. Finally, the project name itself should be displayed prominently.
 
+First, we need some functions to display path
+
+**** Path display
+
+#+BEGIN_SRC elisp
   (defun pi2-6/mood-line-split-path()
     (let ((full-path (file-name-split (buffer-file-name))))
       (if (member "home" full-path)
@@ -221,9 +228,9 @@ Project-short-name | folder/file (or shortened title for notes) \hfill (line:col
        (propertize (s-concat
                     " "
                     (apply #'file-name-concat (butlast split-path)))
-                   'face '(:weight semi-light :foreground "light gray" :background "dark slate gray")))
+                   'face 'mode-line-path))
      (propertize (s-concat "/" (car (last split-path)) " ")
-                 'face '(:weight bold :foreground "white" :background "dark slate gray"))))
+                 'face 'mode-line-file-name)))
 
 
   (defun pi2-6/mood-line-title()
@@ -237,11 +244,13 @@ Project-short-name | folder/file (or shortened title for notes) \hfill (line:col
                    'face '(:inherit 'org-document-title :height 0.5)))
       ((string-match "\\*.*\\*" (buffer-name))
        (propertize (s-concat " " (buffer-name) " ")
-                   'face '(:weight bold :foreground "white" :background "gray")))
+                   'face 'mode-line-star-buffer))
       ((boundp 'meuporg-project-name)
        (pi2-6/mood-line-pretty-path (file-name-split (file-relative-name (buffer-file-name) (projectile-project-root)))))
+      ((buffer-file-name)
+       (pi2-6/mood-line-pretty-path (pi2-6/mood-line-split-path)))
       (t
-       (pi2-6/mood-line-pretty-path (pi2-6/mood-line-split-path))))))
+        (buffer-name)))))
 
 
     (setopt mood-line-format
@@ -1385,7 +1394,7 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
 
   (defun pi2-6/dashboard-header (title)
     "Insert a fontified header."
-    (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-2) "\n"))
+    (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-1) "\n\n"))
 
 #+END_SRC
 
@@ -1459,19 +1468,15 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
       (with-current-buffer buf
         (let ((inhibit-read-only t))
           (erase-buffer)
-          (insert (propertize "Dashboard" 'face 'org-document-title))
+          (insert (propertize "-*-  Dashboard  -*-" 'face 'org-document-title))
           (insert "\n")
 
           (pi2-6/dashboard-ongoing)
           
           (pi2-6/dashboard-reviews)
 
-          (insert "\n\n")
-
           (pi2-6/dashboard-dotfiles)
 
-          (insert "\n\n")
-          
           (pi2-6/dashboard-header "Vulpea/Roam")
           
           (pi2-6/dashboard-papers-by-tags)
@@ -1482,5 +1487,6 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
           (use-local-map widget-keymap)
           (widget-setup)
           (switch-to-buffer buf)
-          ))))
+          (goto-char (point-min))
+          (forward-line 3)))))
 #+END_SRC

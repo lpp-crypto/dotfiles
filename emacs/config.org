@@ -190,10 +190,81 @@ In order to make the cursor easier to find (e.g. when new emacs windows are open
 #+END_SRC
 
 *** Mode line
-Mock up:
+The mode line is based on the [[https://gitlab.com/jessieh/mood-line][mood-line]] package. The default appearance is quite good in my opinion, but we can do better.
 
-Project-short-name | folder/file (or shortened title for notes) \hfill (line:col)
+The default setup is essentially straight from the documentation.
 
+#+BEGIN_SRC elisp
+  (use-package mood-line
+    :ensure t
+    
+    :config
+    (mood-line-mode)
+
+    ;; Use pretty Fira Code-compatible glyphs
+    :custom
+    (mood-line-glyph-alist mood-line-glyphs-fira-code))
+#+END_SRC
+
+We then improve upon the default appearance. The idea is to display more information than just the basic buffer name: the document title in an org document, or the full path to a file if the buffer corresponds to a file. Then, said path should be relative to a project root when relevant. Finally, the project name itself should be displayed prominently.
+
+First, we need some functions to display path
+
+**** Path display
+
+#+BEGIN_SRC elisp
+  (defun pi2-6/mood-line-split-path()
+    (let ((full-path (file-name-split (buffer-file-name))))
+      (if (member "home" full-path)
+          (nthcdr
+           (length (file-name-split (expand-file-name "~")))
+           full-path)
+        full-path)))
+
+
+  (defun pi2-6/mood-line-pretty-path(split-path)
+    (s-concat
+     (when (< 1 (length split-path))
+       (propertize (s-concat
+                    " "
+                    (apply #'file-name-concat (butlast split-path)))
+                   'face 'mode-line-path))
+     (propertize (s-concat "/" (car (last split-path)) " ")
+                 'face 'mode-line-file-name)))
+
+
+  (defun pi2-6/mood-line-title()
+    ; handling potential project name
+    (s-concat
+     (when (boundp 'meuporg-project-name)
+        (propertize (s-concat " " meuporg-project-name " ") 'face 'structure-highlight))
+     (cond 
+      ((string= major-mode "org-mode")
+       (propertize (s-concat " " (org-get-title) " ")
+                   'face '(:inherit 'org-document-title :height 0.5)))
+      ((string-match "\\*.*\\*" (buffer-name))
+       (propertize (s-concat " " (buffer-name) " ")
+                   'face 'mode-line-star-buffer))
+      ((boundp 'meuporg-project-name)
+       (pi2-6/mood-line-pretty-path (file-name-split (file-relative-name (buffer-file-name) (projectile-project-root)))))
+      ((buffer-file-name)
+       (pi2-6/mood-line-pretty-path (pi2-6/mood-line-split-path)))
+      (t
+        (buffer-name)))))
+
+
+    (setopt mood-line-format
+            '(
+              (#1=" " (mood-line-segment-modal) " "
+                  (or (mood-line-segment-buffer-status) " ") " "
+                  (pi2-6/mood-line-title) "  " (mood-line-segment-anzu)
+                  "  " (mood-line-segment-multiple-cursors) "  "
+                  (mood-line-segment-cursor-position) " "
+                  (mood-line-segment-scroll) "")
+              ((mood-line-segment-vc) "  " (mood-line-segment-major-mode) "  "
+               (mood-line-segment-misc-info) "  " (mood-line-segment-checker) "  "
+               (mood-line-segment-process) "  " #1#)))
+#+END_SRC
 ** Scripts
 In order for this system to work well, the scripts in [[./helper-scripts/]] need to be copied somewhere in the path, execution rights added, and extension removed.
 ** File Handling
@@ -301,7 +372,10 @@ Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It si
 
 #+BEGIN_SRC elisp
   (setopt org-tag-faces
-          '(("ongoingWork" . (:background "yellow" :foreground "dim gray"))
+          '(
+            ("ATTACH" . 'org-link)
+
+            ("ongoingWork" . (:background "yellow" :foreground "dim gray"))
             ("attentionNeeded" . (:background "orange" :foreground "dim gray"))
             ("stable" . (:foreground "chartreuse2"))
             ("hack" . (:foreground "tomato"))
@@ -362,38 +436,42 @@ The options are
 #+END_SRC 
 
 ** Attach enhancement
-Attachments are, by default, not openable with a simple mouse click. Furthermore, the corresponding headings don't look like links. This is easily fixed by the following function which can turns a heading with an attachment into a link opening it. This is easily done by having the link execute the =org-attach-open= function.
+Attachments are, by default, not openable with a simple mouse click. Furthermore, the corresponding headings don't look like links. A first approach may consist in adding an advice to the function making attachments to turn the heading into a link calling =org-attach-open=. It works, but when headings are displayed for instance in a consult mini-buffer, the full link is displayed, which is not great. Instead, I turn the ATTACH tag into a link which calls an appropriate function.
 
-Then, this function is added as an advice to =org-attach= so that it is done automatically every time.
+The following snippet makes the =ATTACH= tag clickable.
 
-It doesn't work perfectly if there is a ':' in the heading, but it's rare enough and easy enough to fix by hand that I don't care.
+When clicking on a tag, the function =org-tags-view= is called if we are in an org-agenda file. I thus add an advice around this function which checks if the tag clicked is =ATTACH=, in which case it calls a custom function instead. Otherwise, it simply calls the "normal" =org-tags-view= function.
+
+If we are not in an org-agenda-file, then the =org-open-at-mouse= function is called. Same advice is applied.
 
 #+BEGIN_SRC elisp
-  (defun pi2-6/attach-make-link-open()
+  (require 'org)
+
+  (defun pi2-6/attach-open()
     (interactive)
-    (end-of-line)
-    (re-search-backward "^\\(\\*+\\) +\\([^:]+\\) +:")
-    (replace-match "\\1 [[elisp:(org-attach-open)][\\2]]  :"))
+    (if (member "ATTACH" (org-get-tags))
+        (if (member "images" (org-get-tags))
+            (pi2-6/open-slide-show)
+          (org-attach-open))))
 
-  (defun pi2-6/attach-make-link-slides()
-    (interactive)
-    (end-of-line)
-    (re-search-backward "^\\(\\*+\\) +\\([^:]+\\) +:")
-    (replace-match "\\1 [[elisp:(pi2-6/open-slide-show)][\\2]]  :"))
+  (advice-add 'org-open-at-mouse :around
+              (lambda (oldfun &rest args)
+                (if (and
+                     (org-at-heading-p)
+                     (member "ATTACH" (org-get-tags)))
+                    (pi2-6/attach-open)
+                    (apply oldfun args))))
 
-
-  (defun pi2-6/attach-make-link()
-    (if (member "images" (org-get-tags))
-        (pi2-6/attach-make-link-slides)
-      (pi2-6/attach-make-link-open)))
-
-  (advice-add 'org-attach :after #'pi2-6/attach-make-link)
+  (advice-add 'org-tags-view :around
+              (lambda (oldfun &rest args)
+                (if (member "ATTACH" args)
+                      (pi2-6/attach-open)
+                  (apply oldfun args))))
 #+END_SRC
 
 We also need the following to be able to open attachments with better-ids.
 
 #+BEGIN_SRC elisp
-
 (defun pi2-6/org-attach-id-readable-format (id)
   "Translate an ID based on a readable timestamp to a folder-path.
 Useful way of translation if ID is not generated based on ISO8601
@@ -411,6 +489,7 @@ the rest; the leading character of the rest being dropped."
           org-attach-id-ts-folder-format
           org-attach-id-fallback-folder-format))
  #+END_SRC
+ 
 ** Org babel
 We need to enable the languages in babel. This is done as follows ([[https://emacs-orgmode.gnu.narkive.com/hmJIUIeQ/o-bug-org-babel-execute-src-block-no-org-babel-execute-function-for-python][source]]).
 #+BEGIN_SRC emacs-lisp
@@ -793,6 +872,13 @@ Not very convincing, auctex should be all I need.
   )
 #+END_SRC
 
+** Magit
+#+BEGIN_SRC elisp
+  (use-package magit
+    :ensure t
+    )
+#+END_SRC
+
 * Input/Editing handling
 ** Auto-completion
 *** Orderless
@@ -1039,12 +1125,14 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
   (prg-mode . yas-minor-mode)
   )
 #+END_SRC
+
 ** Efficient search
 #+BEGIN_SRC elisp
   (use-package ag
     :ensure t
     )
 #+END_SRC
+
 ** Custom moving/editing commands
 First, a small helper functions: it unsets keyboard shortcut before assigning it to its new meaning.
    
@@ -1303,9 +1391,12 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
     (insert "  " (pi2-6/pretty-tags tags) "\n"))
 
 
-  (defun pi2-6/dashboard-header (title)
+  (defun pi2-6/dashboard-header (title depth)
     "Insert a fontified header."
-    (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-2) "\n"))
+    (pcase depth
+      (1 (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-1) "\n\n"))
+      (2 (insert (propertize (format "* %s" title ) 'face 'org-level-2) "\n"))
+      (_ (insert title))))
 
 #+END_SRC
 
@@ -1322,7 +1413,7 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
   (defun pi2-6/dashboard-ongoing ()
     "Creates a list of widget links by pulling all the notes tagged
      ongoingWork."
-    (pi2-6/dashboard-header "Ongoing Work")
+    (pi2-6/dashboard-header "Ongoing Work" 1)
     (mapcar 'pi2-6/create-project-link-widget
             (vulpea-db-query-by-tags-every '("ongoingWork"))))
 
@@ -1332,17 +1423,21 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
 #+BEGIN_SRC elisp
   (defun pi2-6/dashboard-dotfiles()
     "Inserts a section linking to the dotfiles."
-    (pi2-6/dashboard-header ".files")
+    (pi2-6/dashboard-header "Maintenance" 1)
+    (pi2-6/dashboard-header ".files" 2)
     (pi2-6/create-file-link "emacs config" "~/dotfiles/emacs/config.org" nil)
     (pi2-6/create-file-link "SWAY config" "~/dotfiles/sway.org" nil)
-    (pi2-6/create-file-link "Scripts" "~/dotfiles/scripts.org" nil))
+    (pi2-6/create-file-link "Scripts" "~/dotfiles/scripts.org" nil)
+    (pi2-6/dashboard-header "Workshop" 2)
+    (pi2-6/create-file-link "Color theme (cyanide-theme)" "~/workshop/cyanide-theme/readme.org" nil)
+    (pi2-6/create-file-link "Meuporg" "~/workshop/meuporg/readme.org" nil))
 #+END_SRC
 
 *** Reviews
 #+BEGIN_SRC elisp
   (defun pi2-6/dashboard-reviews ()
     "Inserts widgets to access reviews."
-    (pi2-6/dashboard-header "Reviews")
+    (pi2-6/dashboard-header "Reviews" 1)
     
     )
 #+END_SRC
@@ -1354,7 +1449,7 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
       (widget-create 'editable-field
                      :size 30
                      :format "Find papers with tags: %v "
-                     :value "bwo"
+                     :value ""
                      :notify (lambda (widget &rest ignore)
                                (setq pi2-6/dashboard-paper-query-tag (widget-value widget))))
       (widget-create 'push-button 
@@ -1379,20 +1474,16 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
       (with-current-buffer buf
         (let ((inhibit-read-only t))
           (erase-buffer)
-          (insert (propertize "Dashboard" 'face 'org-document-title))
+          (insert (propertize "-*-  Dashboard  -*-" 'face 'org-document-title))
           (insert "\n")
 
           (pi2-6/dashboard-ongoing)
           
           (pi2-6/dashboard-reviews)
 
-          (insert "\n\n")
-
           (pi2-6/dashboard-dotfiles)
 
-          (insert "\n\n")
-          
-          (pi2-6/dashboard-header "Vulpea/Roam")
+          (pi2-6/dashboard-header "Vulpea/Roam" 1)
           
           (pi2-6/dashboard-papers-by-tags)
           
@@ -1402,5 +1493,6 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
           (use-local-map widget-keymap)
           (widget-setup)
           (switch-to-buffer buf)
-          ))))
+          (goto-char (point-min))
+          (forward-line 3)))))
 #+END_SRC

@@ -1392,9 +1392,12 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
     (insert "  " (pi2-6/pretty-tags tags) "\n"))
 
 
-  (defun pi2-6/dashboard-header (title)
+  (defun pi2-6/dashboard-header (title depth)
     "Insert a fontified header."
-    (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-1) "\n\n"))
+    (pcase depth
+      (1 (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-1) "\n\n"))
+      (2 (insert (propertize (format "* %s" title ) 'face 'org-level-2) "\n"))
+      (_ (insert title))))
 
 #+END_SRC
 
@@ -1411,7 +1414,7 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
   (defun pi2-6/dashboard-ongoing ()
     "Creates a list of widget links by pulling all the notes tagged
      ongoingWork."
-    (pi2-6/dashboard-header "Ongoing Work")
+    (pi2-6/dashboard-header "Ongoing Work" 1)
     (mapcar 'pi2-6/create-project-link-widget
             (vulpea-db-query-by-tags-every '("ongoingWork"))))
 
@@ -1421,17 +1424,21 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
 #+BEGIN_SRC elisp
   (defun pi2-6/dashboard-dotfiles()
     "Inserts a section linking to the dotfiles."
-    (pi2-6/dashboard-header ".files")
+    (pi2-6/dashboard-header "Maintenance" 1)
+    (pi2-6/dashboard-header ".files" 2)
     (pi2-6/create-file-link "emacs config" "~/dotfiles/emacs/config.org" nil)
     (pi2-6/create-file-link "SWAY config" "~/dotfiles/sway.org" nil)
-    (pi2-6/create-file-link "Scripts" "~/dotfiles/scripts.org" nil))
+    (pi2-6/create-file-link "Scripts" "~/dotfiles/scripts.org" nil)
+    (pi2-6/dashboard-header "Workshop" 2)
+    (pi2-6/create-file-link "Color theme (cyanide-theme)" "~/workshop/cyanide-theme/readme.org" nil)
+    (pi2-6/create-file-link "Meuporg" "~/workshop/meuporg/readme.org" nil))
 #+END_SRC
 
 *** Reviews
 #+BEGIN_SRC elisp
   (defun pi2-6/dashboard-reviews ()
     "Inserts widgets to access reviews."
-    (pi2-6/dashboard-header "Reviews")
+    (pi2-6/dashboard-header "Reviews" 1)
     
     )
 #+END_SRC
@@ -1477,7 +1484,7 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
 
           (pi2-6/dashboard-dotfiles)
 
-          (pi2-6/dashboard-header "Vulpea/Roam")
+          (pi2-6/dashboard-header "Vulpea/Roam" 1)
           
           (pi2-6/dashboard-papers-by-tags)
           

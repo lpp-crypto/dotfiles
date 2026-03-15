@@ -98,6 +98,11 @@
 '(org-headline-done ((t (:foreground "dark green" :background "#eeeee8"))))
 '(org-headline-todo ((t (:foreground "brown"))))
 
+'(org-warning ((t (:foreground "white" :background "#C00000" :weight semi-bold))))
+'(org-todo ((t (:foreground "red" :weight semi-bold))))
+'(org-upcoming-deadline ((t (:foreground "gray"))))
+'(org-upcoming-distant-deadline ((t (:foreground "tan"))))
+
 '(font-latex-sectioning-1-face ((t (:inherit 'org-document-title))))
 '(font-latex-sectioning-2-face ((t (:inherit 'outline-1))))
 '(font-latex-sectioning-3-face ((t (:inherit 'outline-2))))

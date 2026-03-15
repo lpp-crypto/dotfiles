@@ -129,7 +129,7 @@ The inital-scratch-message is added by hand as it would just be added automatica
 
 The signature verification is disabled because of the OS on the desktop being too old.
 #+BEGIN_SRC emacs-lisp 
-  (setopt initial-buffer-choice "~/org/todo.org"
+  (setopt initial-buffer-choice (lambda () (pi2-6/dashboard))
           inhibit-startup-screen t)
 
   (menu-bar-mode -1) 
@@ -380,6 +380,12 @@ Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It si
             ("stable" . (:foreground "chartreuse2"))
             ("hack" . (:foreground "tomato"))
 
+            ("review" . (:background "gray" :foreground "white"))
+            ("orga" . (:background "tan4" :foreground "white"))
+            ("bullshit" . (:background "black" :foreground "white"))
+            ("research" . (:background "chartreuse4" :foreground "white"))
+            ("programming" . (:background "blue" :foreground "white"))
+
             
             ("mine" . (:background "black" :foreground "white" :distant-foreground "black"))
             ("sok" . (:background "white" :foreground "red"))
@@ -447,25 +453,31 @@ If we are not in an org-agenda-file, then the =org-open-at-mouse= function is ca
 #+BEGIN_SRC elisp
   (require 'org)
 
-  (defun pi2-6/attach-open()
+  (defun pi2-6/open-at-point()
     (interactive)
-    (if (member "ATTACH" (org-get-tags))
+    (if (and
+         (org-at-heading-p)
+         (member "ATTACH" (org-get-tags)))
         (if (member "images" (org-get-tags))
             (pi2-6/open-slide-show)
-          (org-attach-open))))
+          (org-attach-open))
+      (condition-case nil 
+          (call-interactively 'org-open-at-point)
+        (error (find-file-at-point)))))
 
+  
   (advice-add 'org-open-at-mouse :around
               (lambda (oldfun &rest args)
                 (if (and
                      (org-at-heading-p)
                      (member "ATTACH" (org-get-tags)))
-                    (pi2-6/attach-open)
+                    (pi2-6/open-at-point)
                     (apply oldfun args))))
 
   (advice-add 'org-tags-view :around
               (lambda (oldfun &rest args)
                 (if (member "ATTACH" args)
-                      (pi2-6/attach-open)
+                      (pi2-6/open-at-point)
                   (apply oldfun args))))
 #+END_SRC
 
@@ -717,13 +729,6 @@ Capturing information for the roam/vulpea directory is handled "by hand" as I co
             (file . find-file)
             (wl . wl-other-frame)))
 
-  (defun pi2-6/open-at-point()
-    "Tries to open an org-link at point, and if it fails then tries to
-   open the file at point."
-    (interactive)
-    (condition-case nil 
-        (call-interactively 'org-open-at-point)
-      (error (find-file-at-point))))
 #+END_SRC
 
 ** Org-Agenda
@@ -814,25 +819,31 @@ Setup projectile
 #+END_SRC
 
 #+BEGIN_SRC elisp
-    (use-package projectile
-      :ensure t
+  (use-package projectile
+    :ensure t
 
-      :custom
-      (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
-      (projectile-project-types nil)
-      (projectile-completion-system 'auto)
-      (projectile-require-project-root t)
-      
-      :config
-      (projectile-mode)
-      (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
-      (projectile-register-project-type
-       'meuporg-project '(".projectile")
-       :project-file ".projectile"
-       :compile "make")
-      (setq projectile-indexing-method 'native)
-      (setq projectile-enable-caching 'persistent)
-      )
+    :custom
+    (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
+    (projectile-project-types nil)
+    (projectile-completion-system 'auto)
+    (projectile-require-project-root t)
+    
+    :config
+    (projectile-mode)
+    (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
+    (projectile-register-project-type
+     'meuporg-project '(".projectile")
+     :project-file ".projectile"
+     :compile "make")
+    (setq projectile-indexing-method 'native)
+    (setq projectile-enable-caching 'persistent)
+    )
+
+  (use-package projectile-ripgrep
+    :ensure t
+    )
+
+  (projectile-ignored-files-rel)
 
 #+END_SRC
 
@@ -1115,15 +1126,21 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
       ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
     )
 #+END_SRC
-** TODO Yasnippet
 ** Yasnippet
 
 #+BEGIN_SRC emacs-lisp 
-(use-package yasnippet
-  :ensure t
-  :hook
-  (prg-mode . yas-minor-mode)
-  )
+  (use-package yasnippet
+    :ensure t
+    :hook
+    (yas-reload-all)
+    (prog-mode . yas-minor-mode)
+    )
+
+
+  ;; (use-package consult-yasnippet
+  ;;  :ensure t
+  ;;  )
+
 #+END_SRC
 ** Hyperbole
 #+BEGIN_SRC elisp
@@ -1207,7 +1224,7 @@ Now, the main function sets all the common keybindings that I use (many of which
     
   					; -- more sophisticated text interaction
     (pi2-6-global-set-key (kbd "M-q") 'fill-paragraph)
-    (pi2-6-global-set-key (kbd "C-_") 'yas-expand)
+    (pi2-6-global-set-key (kbd "C--") 'yas-insert-snippet)
     (pi2-6-global-set-key (kbd "M-'") 'comment-dwim)
 
   					; -- insertions
@@ -1418,7 +1435,7 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
     (mapcar 'pi2-6/create-project-link-widget
             (vulpea-db-query-by-tags-every '("ongoingWork"))))
 
-#+END_SRC
+#+End_SRC
 
 *** Dotfiles
 #+BEGIN_SRC elisp
@@ -1434,13 +1451,46 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
     (pi2-6/create-file-link "Meuporg" "~/workshop/meuporg/readme.org" nil))
 #+END_SRC
 
-*** Reviews
+*** Deadlines
 #+BEGIN_SRC elisp
-  (defun pi2-6/dashboard-reviews ()
-    "Inserts widgets to access reviews."
-    (pi2-6/dashboard-header "Reviews" 1)
-    
-    )
+  (defun pi2-6/dashboard-parse-project-with-deadline(proj)
+    "Returns a list consisting of the number of days left and a formatted
+  string describing the amount of days left."
+    (let* ((timestamp-string (vulpea-meta-get proj "DEADLINE"))
+           (days-left (org-timestamp-to-now timestamp-string)))
+      (list
+       :index days-left
+       :prefix
+       (s-concat
+        (propertize
+         (s-concat timestamp-string (format " (in %3d days) " days-left))
+         'face (cond ((< days-left 0) 'org-warning)
+                     ((< days-left 3) 'org-todo)
+                     ((< days-left 8) 'org-upcoming-deadline)
+                     (t 'org-upcoming-distant-deadline)))
+        (propertize "|" 'face 'bold))
+       :proj proj)))
+
+
+  (defun pi2-6/dashboard-deadlines ()
+    "Inserts widgets to access notes corresponding to ongoingWork that also
+  have a deadline."
+    (pi2-6/dashboard-header "Deadlines" 1)
+    (let ((annotated-proj (mapcar 'pi2-6/dashboard-parse-project-with-deadline
+                                  (seq-filter (lambda (x) (vulpea-meta-get x "DEADLINE"))
+                                              (vulpea-db-query-by-tags-every '("ongoingWork"))))))
+      (sort
+       annotated-proj
+       (lambda (a b) (< (plist-get a :index) (plist-get b :index))))
+      (dolist 
+          (x annotated-proj)
+        (let* ((prefix (plist-get x :prefix))
+               (proj (plist-get x :proj))
+               (proj-tags (remove "ongoingWork" (vulpea-note-tags proj)))
+               (proj-title (vulpea-note-title proj))
+               (proj-path (vulpea-note-path proj)))
+          (insert prefix)
+          (pi2-6/create-file-link proj-title proj-path proj-tags)))))
 #+END_SRC
 
 *** Widgets
@@ -1477,10 +1527,10 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
           (erase-buffer)
           (insert (propertize "-*-  Dashboard  -*-" 'face 'org-document-title))
           (insert "\n")
+          
+          (pi2-6/dashboard-deadlines)
 
           (pi2-6/dashboard-ongoing)
-          
-          (pi2-6/dashboard-reviews)
 
           (pi2-6/dashboard-dotfiles)
 
@@ -1495,5 +1545,9 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
           (widget-setup)
           (switch-to-buffer buf)
           (goto-char (point-min))
-          (forward-line 3)))))
+          (forward-line 3))))
+    (get-buffer "*Dashboard*"))
 #+END_SRC
+
+#+RESULTS:
+: pi2-6/dashboard

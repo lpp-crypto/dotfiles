@@ -1142,13 +1142,12 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
   ;;  )
 
 #+END_SRC
-** Hyperbole
+
+** Efficient search
 #+BEGIN_SRC elisp
-  (use-package hyperbole
+  (use-package ag
     :ensure t
     )
-
-
 #+END_SRC
 
 ** Custom moving/editing commands
@@ -1362,7 +1361,8 @@ None of the python language servers I tried handle =cython=. Neither microsoft's
     :ensure t
     )
 #+END_SRC
-*** LaTeX
+* LaTeX
+** Auctex
 Auctex really simplifies handling LaTeX projects. I take this opportunity to activate two more modes when a LaTeX file is opened:
 - TeX-source-correlate-mode :: allows backward searches whereby clicking on a spot on a pdf file opens a buffer containing the corresponding LaTeX code, and
 - reftex-mode :: a sophisticated minor mode which handles references, both in-file ones (\ref) and external citations (\cite). Also provides the command =reftex-toc= (bound to =C-c == by default) which enables a quick navigation within a document structure independently from the way it is split into distinct LaTeX files.
@@ -1375,6 +1375,24 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
     ((LaTeX-mode . TeX-source-correlate-mode)
      (LaTeX-mode . reftex-mode)))
 #+END_SRC
+** Spelling
+In order for ispell to work correctly (and thus flyspell), it is necessary that the files in [[~/new-emacs/aspell/]] are pointed to by symbolic links in the home folder that have the same name (except for a '.' at the start to hide them).
+
+#+BEGIN_SRC elisp :tangle yes :results output silent
+(defun pi2-6-start-flyspell-mode(dict)
+  (ispell-change-dictionary dict)
+  (flyspell-mode 1)
+  (flyspell-buffer)
+  (message (format "launched flyspell; language: %s"
+		   ispell-local-dictionary)))
+
+(defun pi2-6-flyspell-mode(b)
+  "Prompts the user for a letter and generates a file of the corresponding type"
+  (interactive "c[e] English   [f] French")
+  (cond ((eq b ?e) (pi2-6-start-flyspell-mode "english"))
+	((eq b ?f) (pi2-6-start-flyspell-mode "french"))
+	(t (message "unrecognized language"))))
+
 * Dashboard
 
 #+BEGIN_SRC elisp

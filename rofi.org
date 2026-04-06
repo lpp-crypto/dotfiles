@@ -6,20 +6,17 @@ We open the configuration section as follows:
 
 
 * Configuration
-#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
-configuration {
-#+END_SRC
-
-
 ** Core parameters
-#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
-modi: "window,run,drun,filebrowser";
+#+NAME: rofi-config
+#+BEGIN_SRC css :noweb yes
+modi: "window,run,drun";
 matching: "fuzzy";
 terminal: "kitty";
 #+END_SRC
 
 ** Appearance
-#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+#+NAME: rofi-appearance
+#+BEGIN_SRC css :noweb yes
 width: 50;
 lines: 15;
 columns: 1;
@@ -39,7 +36,8 @@ icon-theme: "Zafiro-Nord-Black-Blue";
 ** Keyboard shortcuts
 These are intended to mimick my emacs setup. *the* killer feature of rofi!
 *** Moving around
-#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+#+NAME: rofi-kbd-moving
+#+BEGIN_SRC css :noweb yes
 kb-row-down: "Down,Alt+k";
 kb-row-up: "Up,Alt+i";
 kb-move-char-back: "Left,Alt+j";
@@ -51,52 +49,162 @@ kb-move-end: "Alt+m";
 #+END_SRC
 
 *** Deleting
-#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
+#+NAME: rofi-kbd-deleting
+#+BEGIN_SRC css :noweb yes
 kb-remove-char-back: "BackSpace,Alt+d";
 kb-remove-char-forward: "Delete,Alt+f";
 kb-remove-word-back: "Alt+e,Control+BackSpace";
 kb-remove-word-forward: "Alt+r";        
 kb-remove-to-eol: "Control+k";
 #+END_SRC
-** filebrowser configuration
-=rofi= refuses to take ="~"= as a default directory, but using ="."= works just the same for some reason.
-
-#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
-filebrowser {
-/** Directory the file browser starts in. */
-directory: ".";
-/**
-  ,* Sorting method. Can be set to:
-  ,*   - "name"
-  ,*   - "mtime" (modification time)
-  ,*   - "atime" (access time)
-  ,*   - "ctime" (change time)
-  ,*/
-sorting-method: "mtime";
-/** Group directories before files. */
-directories-first: true;
-}
-#+END_SRC
 ** Finalization
-Closing the =configuration= section
-#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent
-}
+We write the above content to each file.
+
+#+NAME: rofi-setup
+#+BEGIN_SRC :css :noweb yes
+  configuration {
+  <<rofi-config>>
+  <<rofi-appearance>>
+  <<rofi-kbd-moving>>
+  <<rofi-kbd-deleting>>
+  }
 #+END_SRC
 
 * Theme
-#+BEGIN_SRC text :tangle ~/.config/rofi/rofi.rasi :results output silent :noweb yes
-@theme "paper-float"
+Reference: https://man.archlinux.org/man/rofi-theme.5.en
 
-entry {
-  text-color: <<setup.org:focus-color()>> ;
-  padding: 0em 1em 0em 1em ;
-  cursor-width: 8px;
-}
+** Common part
+#+NAME: rofi-theme-common
+#+BEGIN_SRC css :noweb yes  
+  window {
+      location: north west;
+      width: 1400px;
+      background-color: <<setup.org:background-color()>> ;
+      color: <<setup.org:text-color()>> ;         
+      border: 0px;
+      border-color:  <<setup.org:background-color()>> ;
+      padding: 0.2em;
+      orientation: vertical;
+      fixed-height: false;
+      children: [inputbar, dynamiccontent];      
+  }
 
-element selected.normal {
-  background-color: <<setup.org:focus-color()>> ;
-}
+  inputbar {
+      orientation: horizontal;
+      fixed-height: false;
+      children: [prompt, entry];
+  }
 
+  prompt {
+      text-color: <<setup.org:ontop-color()>> ;
+      border: 0px;
+      padding: 0.3em 1.3em 0.3em 0em;
+      fixed-height: false;
+  }
+
+  mainbox {
+      background-color: <<setup.org:background-color()>> ;
+      fixed-height: false;
+  }
+
+  entry {
+      text-color: <<setup.org:focus-color()>> ;
+      padding: 0.3em 0.3em 0.3em 0em;
+      cursor-width: 0.3em;
+      cursor-color: <<setup.org:focus-color()>>;
+      blink: true;
+      text-color: <<setup.org:text-color()>>;
+      background-color: <<setup.org:background-color()>>;
+      dynamic: true;
+      expand: false;
+      fixed-height: false;
+  }
+
+  element {
+      padding: 0.2em 0.2em 0.2em 0.2em;
+  }
+
+  element selected.normal {
+      background-color: <<setup.org:focus-color()>> ;
+      text-color: <<setup.org:background-color()>> ;
+  }
+
+  element normal.normal {
+      background-color: <<setup.org:text-color()>> ;
+      text-color: <<setup.org:background-color()>> ;
+  }
+
+  element alternate.normal {
+      background-color: #DEDEDE ;
+      text-color: <<setup.org:background-color()>> ;
+  }
+#+END_SRC
+
+** drun
+#+BEGIN_SRC css :tangle ~/.config/rofi/drun.rasi :results output silent :noweb yes
+  <<rofi-setup>>
+
+  <<rofi-theme-common>>
+
+  dynamiccontent {
+      orientation: horizontal;
+      fixed-height: false;
+      children: [listview];
+  }
+
+  listview {
+      fixed-height: false;
+      layout: horizontal;
+      spacing: 4px;
+  }
+#+END_SRC
+
+** dmenu
+The number of lines must be even or else the colors form a checkboard pattern instead of rows.
+
+#+BEGIN_SRC css :tangle ~/.config/rofi/dmenu.rasi :results output silent :noweb yes
+  <<rofi-setup>>
+
+  <<rofi-theme-common>>
+
+  dynamiccontent {
+      orientation: vertical;
+      children: [listview];
+  }
+
+  listview {
+      columns: 6;
+      lines: 3;
+      fixed-height: false;
+      layout: vertical;
+      flow: horizontal;
+      spacing: 4px;
+  }
+#+END_SRC
+
+
+** transient
+The number of lines must be even or else the colors form a checkboard pattern instead of rows.
+
+#+BEGIN_SRC css :tangle ~/.config/rofi/transient.rasi :results output silent :noweb yes
+  <<rofi-setup>>
+
+  <<rofi-theme-common>>
+
+  dynamiccontent {
+      orientation: vertical;
+      children: [listview];
+  }
+
+  listview {
+      columns: 6;
+      lines: 3;
+      fixed-height: false;
+      layout: vertical;
+      flow: horizontal;
+      spacing: 4px;
+      font-weight: bold;
+  }
 #+END_SRC
 
 

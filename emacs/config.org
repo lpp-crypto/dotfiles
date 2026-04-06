@@ -278,14 +278,14 @@ links. It is annoying; the following gets rid of this ([[https://emacs.stackexch
 ** Common settings
 #+BEGIN_SRC elisp
   (setopt org-startup-indented t
-                org-pretty-entities t
-                org-hide-emphasis-markers t
-                org-startup-with-inline-images t
-                org-image-actual-width '(300)
-                org-tags-column 10
-                org-link-elisp-confirm-function nil
-                org-ellipsis "⤵"
-              )
+          org-pretty-entities t
+          org-hide-emphasis-markers t
+          org-startup-with-inline-images t
+          org-image-actual-width '(300)
+          org-tags-column 10
+          org-link-elisp-confirm-function nil
+          org-ellipsis "⤵"
+          )
 #+END_SRC
 
 It is possible to ensure that LaTeX is always rendered by setting =org-startup-with-latex-preview= to =t=, but this has a significant time penalty. Better not to.
@@ -390,22 +390,20 @@ Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It si
             ("mine" . (:background "black" :foreground "white" :distant-foreground "black"))
             ("sok" . (:background "white" :foreground "red"))
 
-            ("sym" . (:background "brown" :foreground "white" :distant-foreground "brown" ))
-            ("stap" . (:background "dark orange" :foreground "white" :distant-foreground "dark orange"))
-            ("light" . (:background "sienna" :foreground "white" :distant-foreground  "sienna"))
-            
+            ("sym" . (:background "sandy brown" :foreground "black" :distant-foreground "black" ))
+            ("math" . (:background "tan" :foreground "black"))
             ("mode" . (:background "magenta" :foreground "black"))
+            ("advPro" . (:background "sienna" :foreground "black"))
 
+            ("stap" . (:background "blue" :foreground "white" :distant-foreground "white"))
+            ("light" . (:background "cyan" :foreground "white" :distant-foreground  "sienna"))
+            ("tfhe" . (:background "light coral" :foreground "black"))
             ("mpc" . (:background "rosy brown" :foreground "black"))
             ("zk" . (:background "coral" :foreground "black"))
             ("fhe" . (:background "tomato" :foreground "black"))
-            ("tfhe" . (:background "light coral" :foreground "black"))
-            
             ("sbox" . (:background "dark violet" :foreground "white" :distant-foreground "dark violet"))
             ("apn" . (:background "cyan" :foreground "black"))
-            ("math" . (:background "deep sky blue" :foreground "black"))
             ("ccz" . (:background "steel blue" :foreground "white" :distant-foreground "steel blue"))
-            
             ("posso" . (:background "chartreuse" :foreground "black"))
             ("differential" . (:background "green" :foreground "white" :distant-foreground "green" ))
             ("linear" . (:background "lime green" :foreground "black"))
@@ -438,7 +436,7 @@ The options are
   (defun pi2-6/open-slide-show()
     "Assuming the attached data is a folder containing pictures,
   starts a slideshow with all of those."
-    (shell-command (format "sxiv -r -S 3 -p -sf '%s' &" (org-attach-dir))))
+    (call-process-shell-command (format "sxiv -r -S 3 -p -sf '%s' &" (org-attach-dir))))
 #+END_SRC 
 
 ** Attach enhancement
@@ -461,11 +459,13 @@ If we are not in an org-agenda-file, then the =org-open-at-mouse= function is ca
         (if (member "images" (org-get-tags))
             (pi2-6/open-slide-show)
           (org-attach-open))
-      (condition-case nil 
-          (call-interactively 'org-open-at-point)
-        (error (find-file-at-point)))))
+      (if (string= major-mode "org-mode")
+          (condition-case nil 
+              (call-interactively 'org-open-at-point)
+            (error (find-file-at-point)))
+        (find-file-at-point))))
 
-  
+
   (advice-add 'org-open-at-mouse :around
               (lambda (oldfun &rest args)
                 (if (and
@@ -533,60 +533,6 @@ Now that org-babel is setup, we can define the following function which tangles 
 #+END_SRC
 
 ** Org :deactivated:
-*** Capture
-The capture templates for org-roam-capture are intended to send the notes in the correct folders, and of course to populate the notes with the correct template. At this stage, =roam= has the following subdirectories:
-- projects :: Contains the meuporg-files for the ongoing projects.
-- reviews :: self explanatory. 
-- library :: contains solidified knowledge. 
-
-#+BEGIN_SRC emacs-lisp :tangle no
-(setopt org-roam-capture-templates
-      '(
-        ("p" "projects" plain (file "~/roam/templates/project.org")
-         :target (file+head "projects/%<%Y%m%d%H%M%S>-${slug}.org"
-                            "#+title: ${title}\n") :unnarrowed t)
-        ("r" "review" plain (file "~/roam/templates/review.org")
-         :target (file+head "reviews/%<%Y%m%d%H%M%S>-${slug}.org"
-                            "#+title: ${title}\n") :unnarrowed t)
-        ("l" "library" plain (file "~/roam/templates/library.org")
-         :target (file+head "library/%<%Y%m%d%H%M%S>-${slug}.org"
-                            "#+title: ${title}\n") :unnarrowed t)
-        ))
-
-#+END_SRC
-
-*** Custom opening functions
-
-#+BEGIN_SRC emacs-lisp  :tangle no
-  (defun pi2-6/org-roam-find-library ()
-      (interactive)
-      (org-roam-node-find
-       nil nil
-       (lambda (node)
-         (member "paper" (org-roam-node-tags node)))))
-
-  (defun pi2-6/org-roam-find-review ()
-      (interactive)
-      (org-roam-node-find
-       nil nil
-       (lambda (node)
-         (member "review" (org-roam-node-tags node)))))
-
-
-  (defun pi2-6/org-roam-find-other ()
-      (interactive)
-      (org-roam-node-find
-       nil nil
-       (lambda (node)
-         (not (or
-               (member "review" (org-roam-node-tags node))
-               (member "paper" (org-roam-node-tags node)))))))
-
-  (defun pi2-6/org-roam-find-meuporg()
-    (interactive)
-    (if (boundp 'meuporg-file)
-        (org-roam-id-open meuporg-file nil)))
-#+END_SRC
 
 *** use-package
 The parameter =org-roam-completion-everywhere= means that every string can potentially be auto-completed into an org-roam link. Since most common words appear somewhere in the title of a note, this gets very annoying very quickly: best to disable it.
@@ -618,13 +564,20 @@ The parameter =org-roam-completion-everywhere= means that every string can poten
     :config
     (setopt vulpea-db-sync-directories '("~/roam/"))
     (setopt vulpea-default-notes-directory "~/roam/")
-    (setopt vulpea-db-sync-external-method 'auto)
+    ;; (setopt vulpea-db-sync-external-method 'auto)
     (vulpea-db-autosync-mode +1))
 
 #+END_SRC
 
 ** Capture
 Capturing information for the roam/vulpea directory is handled "by hand" as I couldn't get =org-capture= to do what I wanted. On the other hand, it is very easy to write dedicated =vulpea= creation functions, the specific choice of which to call then being decided using =transient=.
+
+The capture templates are intended to send the notes in the correct folders, and of course to populate the notes with the correct template. At this stage, =roam= has the following subdirectories:
+- projects :: Contains the meuporg-files for the ongoing projects.
+- reviews :: self explanatory. 
+- library :: contains solidified knowledge. 
+
+
 #+BEGIN_SRC elisp
   (defun pi2-6/capture-paper(title)
       "Capture a paper"
@@ -655,14 +608,15 @@ Capturing information for the roam/vulpea directory is handled "by hand" as I co
        (interactive "sReviewed paper title: ")
        (vulpea-visit (vulpea-create (format "%s (review)" title)
                                     "reviews/${timestamp}_${slug}.org"
-                                    :body "* ${title} :review:ongoingWork: \nDEADLINE: \n:PROPERTIES:\n:ID: %(org-id-get-create)\n:END:\n* Files\n** main pdf\n* Diary  :noexport:")))
+                                    :tags '("ongoingWork" "review")
+                                    :body "- DEADLINE :: \n\n* Files\n** main pdf\n* Diary  :noexport:")))
 #+END_SRC
 
 #+RESULTS:
 : pi2-6/capture-review
 
 #+BEGIN_SRC elisp
-  
+
    (defun pi2-6/find-ongoingWork()
      "Selects a vulpea note with the ongoingWork tag"
      (interactive)
@@ -674,13 +628,17 @@ Capturing information for the roam/vulpea directory is handled "by hand" as I co
     (interactive)
     (vulpea-visit (vulpea-select-from "Select paper" (vulpea-db-query-by-tags-every '("paper")))))
 
-  
+
   (defun pi2-6/find-attachment()
     "Find an attachment within the vulpea/roam directory"
     (interactive)
     (vulpea-visit (vulpea-select-from "Select attachment" (vulpea-db-query-by-tags-every '("attach")))))
 
-  
+  (defun pi2-6/vulpea-nuke-db()
+    "Clears the vulpea database and recompute it from scratch"
+    (interactive)
+    (vulpea-db-clear)
+    (vulpea-db-sync-full-scan))
 #+END_SRC
 
   The selection function is then a simple =transient= function.
@@ -697,30 +655,42 @@ Capturing information for the roam/vulpea directory is handled "by hand" as I co
         ("o" "new pr[o]ject entry" pi2-6/capture-project)
         ("r" "new [r]eview" pi2-6/capture-review)
         ("i" "grab l[i]nk" vulpea-insert)
+        ("u" "[u]pdate db for this file" vulpea-db-sync-update-file)
+        ("n" "[n]uke db and recompute it" pi2-6/vulpea-nuke-db)
          ])
 #+END_SRC
 
 ** Org links
+  
 #+BEGIN_SRC elisp
-  (setopt
-   org-file-apps
-   '(
-     ("\\.mm\\'" . default)
-     ("\\.x?html?\\'" . default)
-     ("\\.pdf::#\\([0-9]+\\)?" . "evince %s -i %1")
-                                          ; ("\\.pdf::\\(\\?\\(:[[:alnum:]]\\|[[:space:]]\\|[[:punct:]]\\)+\\)?" . "evince %s -l \"%1\"")
-     ("\\.pdf::\\([a-zA-Z0-9,.; ]+\\)?" . "evince %s -l \"%1\"")
-     ("\\.pdf" . "evince %s")
-     ("\\.mp4" . "vlc %s")
-     ("\\.doc" . "libreoffice %s")
-     ("\\.docx" . "libreoffice %s")
-     ("\\.ods" . "libreoffice %s")
-     ("\\.xls" . "libreoffice %s")
-     ("\\.xlsx" . "libreoffice %s")
-     ("\\.ppt" . "libreoffice %s")
-     ("\\.pptx" . "libreoffice %s")
-     (auto-mode . emacs)
-     ))
+  (setopt file-apps
+          '(
+            ("\\.pdf" . "evince '%s'")
+            ("\\.mp4" . "vlc '%s'")
+            ("\\.mpeg" . "vlc '%s'")
+            ("\\.webm" . "vlc '%s'")
+
+            ("\\.png" . "sxiv '%s'")
+            ("\\.jpg" . "sxiv '%s'")
+            ("\\.jpeg" . "sxiv '%s'")
+
+            ("\\.doc" . "libreoffice '%s'")
+            ("\\.docx" . "libreoffice '%s'")
+            ("\\.ods" . "libreoffice '%s'")
+            ("\\.xls" . "libreoffice '%s'")
+            ("\\.xlsx" . "libreoffice '%s'")
+            ("\\.ppt" . "libreoffice '%s'")
+            ("\\.pptx" . "libreoffice '%s'")
+            ))
+
+  (setopt org-file-apps
+          (-concat '((auto-mode . emacs)
+                     ("\\.mm\\'" . default)
+                     ("\\.x?html?\\'" . default)
+                     ("\\.pdf::#\\([0-9]+\\)?" . "evince '%s' -i %1")
+                     ("\\.pdf::\\([a-zA-Z0-9,.; ]+\\)?" . "evince '%s' -l \"%1\""))
+                   file-apps))
+
 
   (setopt org-link-frame-setup
           '((vm . vm-visit-folder-other-frame)
@@ -729,10 +699,30 @@ Capturing information for the roam/vulpea directory is handled "by hand" as I co
             (file . find-file)
             (wl . wl-other-frame)))
 
+  ;; (setopt dired-guess-shell-alist-user
+  ;;         '(
+  ;;           ("\\.pdf\\'" "evince")
+  ;;           ))
+          ;; (mapcar (lambda (assoc) (list (car assoc) `(format (cdr ,assoc) file)))
+          ;;        file-apps))
+
+  (defun pi2-6/open-externally-maybe (filename &rest _)
+    "Checks if the file extension is in org-file-apps, and
+  if yes then runs the corresponding program."
+    (when-let ((match (seq-find (lambda (assoc)
+                                  (string-match-p (car assoc) filename))
+                                file-apps)))
+      (call-process-shell-command (s-concat (format (cdr match) filename) " &"))
+      t))
+
+  (advice-add 'find-file :before-until #'pi2-6/open-externally-maybe)
+#+END_SRC
+
+
 #+END_SRC
 
 ** Org-Agenda
-*** Setting up org-agenda files :stable:
+*** Setting up org-agenda files
 First, we need to specify where to look for TODO items. These are stored in org-roam files, but, in order to avoid to parse all of them (both for emacs and for myself), files that correspond to ongoing work have the corresponding tag set at the file level. Those that are finished are move to "stable", following the logic described in [[*Tags]]
 
 The code exracting ongoing work from the vulpea/roam folder is easy to write.
@@ -1041,7 +1031,7 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
 
 
 #+BEGIN_SRC elisp
-(global-unset-key (kbd "M-x"))
+  (global-unset-key (kbd "M-x"))
 
   (use-package consult
       :ensure t
@@ -1054,7 +1044,7 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
              ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
              ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
              ;; Other custom bindings
-             ("M-V" . consult-yank-pop)                ;; orig. yank-pop
+             ("M-S-v" . consult-yank-pop)                ;; orig. yank-pop
              ;; M-g bindings in `goto-map'
              ("M-x g" . consult-goto-line)             ;; orig. goto-line
              ("M-x o" . consult-outline)               ;; Alternative: consult-org-heading
@@ -1124,7 +1114,7 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
       ;; Optionally make narrowing help available in the minibuffer.
       ;; You may want to use `embark-prefix-help-command' or which-key instead.
       ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
-    )
+      )
 #+END_SRC
 ** Yasnippet
 
@@ -1132,8 +1122,11 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
   (use-package yasnippet
     :ensure t
     :hook
-    (yas-reload-all)
     (prog-mode . yas-minor-mode)
+
+    :config
+    (yas-minor-mode-on)
+    (yas-reload-all)
     )
 
 
@@ -1141,6 +1134,99 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
   ;;  :ensure t
   ;;  )
 
+#+END_SRC
+*** Python Snippets
+**** Main function
+#+BEGIN_SRC text :tangle ~/.emacs.d/snippets/python-mode/main
+  # name: __main__
+  # --
+  if __name__ == "__main__":
+      $1
+#+END_SRC
+**** Standard imports
+#+BEGIN_SRC text :tangle ~/.emacs.d/snippets/python-mode/imports
+  # name: imports
+  # --
+  from sage.all import *
+  from sboxU import *
+#+END_SRC
+**** Function declaration
+#+BEGIN_SRC text :tangle ~/.emacs.d/snippets/python-mode/def
+  # name: def
+  # --
+  def ${1:function_name}(${2:params}) -> ${3:output_type}:
+      """!TODO! write docstring for $1
+
+      Args:
+          $2
+
+      Returns:
+          $3
+      """
+      $0
+#+END_SRC
+**** Class declaration
+#+BEGIN_SRC text :tangle ~/.emacs.d/snippets/python-mode/class
+  # name: class
+  # --
+  class ${1:className}:
+      """!TODO! write docstring for class $1
+      """
+
+      def __init__(self, ${2:params}):
+          """!TODO! write docsting for init of class $1
+
+          Args:
+              $2
+          """
+          $0
+#+END_SRC
+*** org-mode snippets
+#+BEGIN_SRC text :tangle ~/.emacs.d/snippets/org-mode/elisp-src
+  # name: elisp-src
+  # --
+  ,#+BEGIN_SRC elisp :tangle no
+      $1
+  ,#+END_SRC
+#+END_SRC
+
+#+BEGIN_SRC text :tangle ~/.emacs.d/snippets/org-mode/sage-src
+  # name: sage-src
+  # --
+  ,#+BEGIN_SRC python :python sage
+      $1
+  ,#+END_SRC
+#+END_SRC
+
+
+** Jumping within a file
+*** Adding/going back to an anchor
+It is common to do something at a specific point, but to want to
+quickly visit another part of the file. The following functions allow
+placing an "anchor" at the current point to which we can quickly back,
+wherever we went to in the file.
+
+#+BEGIN_SRC emacs-lisp
+(defun pi2-6/save-anchor()
+  (interactive)
+  (point-to-register 16449)
+  (message "anchor placed"))
+
+(defun pi2-6/back-to-anchor()
+  (interactive)
+  (jump-to-register 16449)
+  (message "back to anchor; it was erased"))
+#+END_SRC
+*** Avy
+Documentation: [[https://github.com/abo-abo/avy]]
+
+Relevant blog post: https://karthinks.com/software/avy-can-do-anything/
+ 
+#+BEGIN_SRC emacs-lisp
+  (use-package avy
+    :ensure t
+
+    )
 #+END_SRC
 
 ** Efficient search
@@ -1192,8 +1278,10 @@ Now, the main function sets all the common keybindings that I use (many of which
     (pi2-6-global-set-key (kbd "M-;") 'isearch-forward)
     (pi2-6-global-set-key (kbd "M-:") 'isearch-backward)
     (pi2-6-global-set-key (kbd "M-\" g") 'goto-line)
-    (pi2-6-global-set-key (kbd "M-\" s") 'pi2-6-save-anchor)
-    (pi2-6-global-set-key (kbd "M-\" b") 'pi2-6-back-to-anchor)
+    (pi2-6-global-set-key (kbd "M-\" l") 'avy-goto-line)
+    (pi2-6-global-set-key (kbd "M-\" j") 'avy-goto-char-timer)
+    (pi2-6-global-set-key (kbd "M-\" s") 'pi2-6/save-anchor)
+    (pi2-6-global-set-key (kbd "M-\" b") 'pi2-6/back-to-anchor)
 
                                           ; -- outline
     (pi2-6-global-set-key (kbd "M-é") 'outline-forward-same-level)
@@ -1423,6 +1511,7 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
                    :button-suffix ""
                    :button-face '(:weight 'normal)
                    :action `(lambda (widget &optional event)
+                              (kill-buffer "*Dashboard*")
                               (find-file ,path)))
     (insert "  " (pi2-6/pretty-tags tags) "\n"))
 
@@ -1485,7 +1574,8 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
          'face (cond ((< days-left 0) 'org-warning)
                      ((< days-left 3) 'org-todo)
                      ((< days-left 8) 'org-upcoming-deadline)
-                     (t 'org-upcoming-distant-deadline)))
+                     ((< days-left 20) 'org-upcoming-distant-deadline)
+                     (t '(:foreground "tan"))))
         (propertize "|" 'face 'bold))
        :proj proj)))
 
@@ -1511,6 +1601,9 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
           (pi2-6/create-file-link proj-title proj-path proj-tags)))))
 #+END_SRC
 
+#+RESULTS:
+: pi2-6/dashboard-deadlines
+
 *** Widgets
 #+BEGIN_SRC elisp
     (defun pi2-6/dashboard-papers-by-tags ()
@@ -1534,6 +1627,25 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
 
 #+END_SRC
 
+** Local keymap
+
+#+BEGIN_SRC elisp
+  (defvar pi2-6/dashboard-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "q") '(lambda () (interactive) (kill-buffer "*Dashboard*")))
+      (define-key map (kbd "o") 'find-file)
+      (define-key map (kbd "f") 'vulpea-find)
+      (define-key map (kbd "j") '(lambda () (interactive) (avy-goto-char ?→)))
+      map)
+    "Keymap for the dashboard.")
+
+  (set-keymap-parent pi2-6/dashboard-map widget-keymap)
+
+#+END_SRC
+
+#+RESULTS:
+: (keymap (13 . widget-button-press) (touchscreen-begin . widget-button-click) (down-mouse-1 . widget-button-click) (down-mouse-2 . widget-button-click) (backtab . widget-backward) (S-tab . widget-backward) (27 keymap (9 . widget-backward)) (9 . widget-forward))
+
 ** Main Function
 #+BEGIN_SRC elisp
   (defun pi2-6/dashboard ()
@@ -1544,7 +1656,15 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
         (let ((inhibit-read-only t))
           (erase-buffer)
           (insert (propertize "-*-  Dashboard  -*-" 'face 'org-document-title))
-          (insert "\n")
+          (insert "\n\n")
+          (insert (s-concat (propertize "[o]" 'face 'bold)
+                            "pen file  ⋅  "
+                            (propertize "[j]" 'face 'bold)
+                            "ump to link  ⋅  "
+                            (propertize "[f]" 'face 'bold)
+                            "ind in vulpea  ⋅  "
+                            (propertize "[q]" 'face 'bold)
+                            "uit \n"))
           
           (pi2-6/dashboard-deadlines)
 
@@ -1559,12 +1679,12 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
           (insert "\n\n")
           
 
-          (use-local-map widget-keymap)
+          (use-local-map pi2-6/dashboard-map)
           (widget-setup)
           (switch-to-buffer buf)
           (goto-char (point-min))
-          (forward-line 3))))
-    (get-buffer "*Dashboard*"))
+          (forward-line 1))))
+      (get-buffer "*Dashboard*"))
 #+END_SRC
 
 #+RESULTS:

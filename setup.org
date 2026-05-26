@@ -40,7 +40,7 @@ return "kitty"
 *** Executables
 #+NAME: etabli-dir
 #+BEGIN_SRC python
-~/.local/bin
+~/dotfiles/pi26venv/bin
 #+END_SRC
 
 #+NAME: etabli

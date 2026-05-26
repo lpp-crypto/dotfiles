@@ -22,7 +22,7 @@ Taking inspiration from the org documentation https://orgmode.org/manual/Batch-E
 ** Main update script
 The call to emacs in "batch" mode is adapted from the org documentation https://orgmode.org/manual/Batch-Execution.html. Yes, installing the custom, properly compiled emacs I use requires emacs to be installed so the org files can be tangled. This is not very elegant in terms of bootstrapping, but well.
 
-#+BEGIN_SRC sh ./update-config.sh
+#+BEGIN_SRC sh :tangle ./update-config.zsh
   #!/bin/zsh
 
   # we go ever all files in this folder (except setup.org)...
@@ -33,14 +33,13 @@ The call to emacs in "batch" mode is adapted from the org documentation https://
   done
 
 
-  # handling emacs
-  cd emacs  
-  emacs -Q --batch --eval "$(cat ../generate.el)" config.org
-  zsh ./install.zsh
-  emacs -Q --batch --eval "(byte-compile-file \"~/.emacs.el\")"
+  # # handling emacs
+  # cd emacs  
+  # emacs -Q --batch --eval "$(cat ../generate.el)" config.org
+  # zsh ./install.zsh
+  # emacs -Q --batch --eval "(byte-compile-file \"~/.emacs.el\")"
 
-  # finally, we restart sway
+  # # finally , we restart
   swaymsg reload
-
 
 #+END_SRC

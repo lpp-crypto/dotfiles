@@ -59,7 +59,7 @@
 
 '(cyanide-class-name-face ((t (:background "lemon chiffon" :foreground "dark orange" :weight bold :height 1.3))))
 
-'(outline-1 ((t (:background "#bdad99" :foreground "black" :height 1.7 :weight extra-bold :box (:line-width (10 . 10) :color "#bdad99")))))
+'(outline-1 ((t (:background "#87cefa" :foreground "#000000" :height 1.7 :weight extra-bold :box (:line-width (10 . 10) :color "#87cefa")))))
 '(outline-2 ((t (:background "#eeeee8" :foreground "#a14821" :height 1.5 :weight bold :box (:line-width (10 . 10) :color "#eeeee8")))))
 '(outline-3 ((t (:background "#eeeee8" :foreground "#653c29" :height 1.2 :weight semi-bold :box (:line-width (6 . 6) :color "#eeeee8")))))
 '(outline-4 ((t (:background "#eeeee8" :foreground "#513428" :height 1.05 :weight semi-bold :box (:line-width (3 . 3) :color "#eeeee8")))))
@@ -100,8 +100,8 @@
 
 '(org-warning ((t (:foreground "white" :background "#C00000" :weight semi-bold))))
 '(org-todo ((t (:foreground "red" :weight semi-bold))))
-'(org-upcoming-deadline ((t (:foreground "gray"))))
-'(org-upcoming-distant-deadline ((t (:foreground "tan"))))
+'(org-upcoming-deadline ((t (:foreground "orange2" :weight semi-bold))))
+'(org-upcoming-distant-deadline ((t (:foreground "olive drab"))))
 
 '(font-latex-sectioning-1-face ((t (:inherit 'org-document-title))))
 '(font-latex-sectioning-2-face ((t (:inherit 'outline-1))))

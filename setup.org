@@ -14,16 +14,20 @@ fi
 
 * Commands
 ** Dmenu Replacement
-[[https://github.com/davatorium/rofi][rofi]] is a good =dmenu= allowing a lot of configuration. Its configuration file, =~/.config/rofi/rofi.rasi=, is generated in [[/home/leo/dotfiles/rofi.org][rofi.org]].
+[[https://github.com/davatorium/rofi][rofi]] is a good =dmenu= allowing a lot of configuration. Its configuration files are generated in [[/home/leo/dotfiles/rofi.org][rofi.org]] (in particular, there are two different ones, one for each usage).
 
-#+NAME: dmenu
-#+BEGIN_SRC python
-return "rofi -dmenu -config ~/.config/rofi/rofi.rasi -i -p"
-#+END_SRC
+Two different commands are specified. The first is for =drun=, i.e., the application launcher. In this case, using a fancy fuzzy sort can be annoying: I already know the name of the program and the sorting algorithms are heavily biased by history, meaning any 2 characters string somehow brings up emacs as a first candidate. Hence, a "normal" matching is preferred here.
 
 #+NAME: drun
 #+BEGIN_SRC python
-return "rofi -show drun -config ~/.config/rofi/rofi.rasi"
+return "rofi -show drun -config ~/.config/rofi/drun.rasi -matching normal"
+#+END_SRC
+
+The second one is for =dmenu=, i.e. when a menu with custom choices prompts me for a choice between different strings.
+
+#+NAME: dmenu
+#+BEGIN_SRC python
+return "rofi -dmenu -config ~/.config/rofi/dmenu.rasi -markup-rows -no-show-icons -i -p"
 #+END_SRC
 
 ** Terminal
@@ -69,9 +73,24 @@ return "<<etabli-dir>>/etabli_theme_generator"
 echo -n "#332b1e"
 #+END_SRC
 
+#+NAME: text-color
+#+BEGIN_SRC sh :results output
+echo -n "#BBBBBB"
+#+END_SRC
+
 #+NAME: focus-color
 #+BEGIN_SRC sh :results output
 echo -n "#d9a032"
+#+END_SRC
+
+#+NAME: ontop-color
+#+BEGIN_SRC sh :results output
+echo -n "#4682b4"
+#+END_SRC
+
+#+NAME: inactive-color
+#+BEGIN_SRC sh :results output
+echo -n "#707070"
 #+END_SRC
 
 #+NAME: theme
@@ -79,9 +98,9 @@ echo -n "#d9a032"
 <<setup.org:etabli_theme()>> \
     --background   "<<background-color()>>" \
     --focus        "<<focus-color()>>" \
-    --ontop        "#4682b4" \
-    --active       "#BBBBBB" \
-    --inactive     "#707070" \
+    --ontop        "<<ontop-color()>>" \
+    --active       "<<text-color()>>" \
+    --inactive     "<<inactive-color()>>" \
     --symbol_open  " ("      \
     --symbol_close ") "      \
     $to_print

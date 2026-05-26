@@ -1,5 +1,5 @@
 #!/usr/bin/zsh
-COMMAND=$(echo "Yes\nNo" | rofi -dmenu -config ~/.config/rofi/rofi.rasi -i -p "Are you sure about $1?")
+COMMAND=$(echo "Yes\nNo" | rofi -dmenu -config ~/.config/rofi/dmenu.rasi -markup-rows -no-show-icons -i -p "Are you sure about $1?")
 if [[ $COMMAND == "Yes" ]]; then
     echo "Yes"
 else

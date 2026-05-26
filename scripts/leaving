@@ -1,7 +1,7 @@
 #!/usr/bin/zsh
 
 
-COMMAND=$(echo "Lock\nExit\nSuspend\nReboot\nSwitch off" | rofi -dmenu -config ~/.config/rofi/rofi.rasi -i -p "What should I do?")
+COMMAND=$(echo "Lock\nExit\nSuspend\nReboot\nSwitch off" | rofi -dmenu -config ~/.config/rofi/dmenu.rasi -markup-rows -no-show-icons -i -p "What should I do?")
 case $COMMAND in
 "Lock")
     swaylock --color 7f7965

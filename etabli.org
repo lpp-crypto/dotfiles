@@ -5,7 +5,7 @@
 
 #+BEGIN_SRC toml :tangle ~/.etabli_config.toml :noweb yes
 board_path = "~/.etabli_board"
-dmenu = "rofi -dmenu -config ~/.config/rofi/rofi.rasi -i -p"
+dmenu = "<<setup.org:dmenu()>>"
 hrule = " "
 #+END_SRC
 

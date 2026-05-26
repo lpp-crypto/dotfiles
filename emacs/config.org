@@ -510,7 +510,8 @@ We need to enable the languages in babel. This is done as follows ([[https://ema
    'org-babel-load-languages
    '((python . t)
      (C . t)
-     (shell . t)))
+     (shell . t)
+     (dot . t)))
 #+END_SRC
 
 
@@ -1447,6 +1448,17 @@ None of the python language servers I tried handle =cython=. Neither microsoft's
 
 #+END_SRC
 ** Specific tools
+*** dot
+Dot is a language to make graphs (as in, nodes and edges). The following use-package call comes from its [[https://github.com/ppareit/graphviz-dot-mode][documentation]].
+#+BEGIN_SRC elisp
+  (use-package graphviz-dot-mode
+    :ensure t
+    :config
+    (setq graphviz-dot-indent-width 4)
+    :hook
+    (graphviz-dot-mode . flycheck-mode))
+#+END_SRC
+
 *** Cmake
 #+BEGIN_SRC elisp
   (use-package cmake-mode

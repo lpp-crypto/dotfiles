@@ -41,6 +41,8 @@
 ;;; SECTION:
 
 
+(require 'ox)
+
 (defvar meuporg/font-faces
   "Defines how the different items should be displayed in the
   list of items.")
@@ -238,7 +240,39 @@ new comment is created."
      (setq-local outline-heading-end-regexp "\n" outline-level #'meuporg-outline-level)))
 
 
-(setopt org-num-face 'structure-highlight)
+
+(defun meuporg-org-num-format-function (numbering)
+  (let ((num-and-formatter
+         (cl-mapcar #'list numbering
+                    '(org-export-number-to-roman
+                      number-to-string
+                      (lambda (n) (downcase (org-number-to-letters n)))
+                      number-to-string
+                      (lambda (n) (downcase (org-export-number-to-roman n)))
+                      number-to-string
+                      number-to-string
+                      number-to-string))))
+    (concat
+     (propertize (mapconcat (lambda (pair)
+                              (funcall (cadr pair) (car pair)))
+                            (butlast num-and-formatter)
+                            ".")
+                 'face '(:inherit structure-highlight :foreground "light gray"))
+     (propertize (concat
+                  " "
+                  (mapconcat (lambda (pair)
+                               (funcall (cadr pair) (car pair)))
+                             (last num-and-formatter)
+                             ".")
+                  ")")
+                 'face 'structure-highlight)
+     " ")))
+
+
+
+(setopt ;; org-num-face 'structure-highlight
+        org-num-format-function 'meuporg-org-num-format-function)
+
 (add-hook 'after-change-major-mode-hook
           (lambda ()
             (when (not (string= major-mode "org-mode"))

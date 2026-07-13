@@ -51,7 +51,7 @@
 
 '(mode-line ((t (:background "#bdad99" :foreground "black"))))
 
-'(font-lock-comment-face ((t (:background "#f1f1f8" :foreground "#398a76" :weight light :slant italic))))
+'(font-lock-comment-face ((t (:background "#f1f1f8" :foreground "#709b7c" :weight light :slant italic))))
  '(font-lock-constant-face ((t (:background "#faf4dd" :foreground "DarkOrange3"))))
  '(font-lock-builtin-face ((t (:background "#faf4dd" :foreground "OliveDrab4" :weight semi-bold))))
  '(font-lock-keyword-face ((t (:background "#faf4dd" :foreground "blue" :weight semi-bold))))

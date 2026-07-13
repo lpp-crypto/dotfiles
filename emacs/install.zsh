@@ -17,17 +17,17 @@ fi
 
 cd emacs-$VERSION/
 ./configure --with-native-compilation \
-              --with-tree-sitter \
-              --with-modules \
-              --with-threads \
-              --with-mailutils \
-              --with-gif \
-              --with-png \
-              --with-jpeg \
-              --with-rsvg \
-              --with-tiff \
-              --with-imagemagick \
-              --without-x \
-              --with-pgtk
-  make clean
-  make -j8
+            --with-tree-sitter \
+            --with-modules \
+            --with-threads \
+            --with-mailutils \
+            --with-gif \
+            --with-png \
+            --with-jpeg \
+            --with-rsvg \
+            --with-tiff \
+            --with-imagemagick \
+            --without-x \
+            --with-pgtk
+make clean
+make -j8

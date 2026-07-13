@@ -1,6 +1,6 @@
 #+TITLE: Waybar
 #+PROPERTY: header-args :noweb yes
-#+setupfile: setup.org
+#+setupfile: ./setup.org
 
 
 
@@ -13,18 +13,20 @@
 if [ <<setup.org:is-laptop()>> ]; then
     echo -n "eDP-1"
 else
-    echo -n "HDMI-A-1"
+    echo -n "DP-1"
 fi
 #+END_SRC
+
 
 #+NAME: second-output
 #+BEGIN_SRC zsh :results output
 if [ <<setup.org:is-laptop()>> ]; then
     echo -n "!eDP-1"
 else
-    echo -n "!HDMI-A-1" 
+    echo -n "!DP-1" 
 fi
 #+END_SRC
+
 
 * Starting up the bar
 ** Configuration

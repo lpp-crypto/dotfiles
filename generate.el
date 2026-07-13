@@ -7,7 +7,9 @@
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((python . t) (shell . t))) ; <- add any other language here
-  (setq org-confirm-babel-evaluate nil python-indent-guess-indent-offset-verbose nil)
+  (setq org-confirm-babel-evaluate nil
+        python-indent-guess-indent-offset-verbose nil
+        org-babel-python-command "python3")
   (dolist (file command-line-args-left)
     (with-current-buffer (find-file-noselect file)
       (org-babel-tangle))))

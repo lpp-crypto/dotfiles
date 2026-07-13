@@ -287,6 +287,7 @@ links. It is annoying; the following gets rid of this ([[https://emacs.stackexch
           org-tags-column 10
           org-link-elisp-confirm-function nil
           org-ellipsis "⤵"
+          org-edit-src-content-indentation 0
           )
 #+END_SRC
 
@@ -517,10 +518,7 @@ We need to enable the languages in babel. This is done as follows ([[https://ema
 #+END_SRC
 
 
-Some more tweaks are needed though, in particular we need to tell
-org-mode to use =python3= rather than =python= as a command. This is
-done as [[https://emacs.stackexchange.com/questions/28184/org-mode-how-can-i-point-to-python3-5-in-my-org-mode-doc][here]]. We also org-mode not to ask for a confirmation everytime
-we evaluate a code block.
+Some more tweaks are needed though, in particular we need to tell org-mode to use =python3= rather than =python= as a command. This is done as [[https://emacs.stackexchange.com/questions/28184/org-mode-how-can-i-point-to-python3-5-in-my-org-mode-doc][here]]. We also tell org-mode not to ask for a confirmation everytime we evaluate a code block.
 #+BEGIN_SRC emacs-lisp
 (setq org-babel-python-command "python3"
       org-confirm-babel-evaluate nil)
@@ -1203,6 +1201,26 @@ Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-packa
   ,#+BEGIN_SRC python :python sage
       $1
   ,#+END_SRC
+#+END_SRC
+*** C++ snippet
+#+BEGIN_SRC text :tangle ~/.emacs.d/snippets/c++-mode/docstring
+  # name: docstring-cc
+  # --
+  /** @brief $0
+   ,*
+   ,* @param
+   ,*
+   ,* @result
+   ,*/
+#+END_SRC
+
+#+BEGIN_SRC text :tangle ~/.emacs.d/snippets/c++-mode/for-range
+  # name: for-range
+  # --
+  for (${1:type} ${2:variable}=0; $2<${3:upperBound}; $2++)
+  {
+      $0
+  }
 #+END_SRC
 
 

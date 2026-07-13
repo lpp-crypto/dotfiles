@@ -259,6 +259,8 @@ bindsym $mod+Shift+twosuperior exec <<setup.org:etabli_dmenu()>> --choose_worksp
 bindsym $mod+c exec zsh ~/dotfiles/scripts/screencap
 #+END_SRC
 
+#+RESULTS:
+
 *** Sound control
 #+BEGIN_SRC sh
 bindsym XF86AudioMute exec pactl set-sink-mute $(pactl list sinks short | grep RUNNING | cut -f 1) toggle
@@ -285,7 +287,7 @@ gaps inner 6
 
 
 #+BEGIN_SRC sh
-font pango:Iosevka SS01 12
+font pango:Iosevka 12
 
 # border without title bar
 default_border pixel 4

@@ -3,7 +3,7 @@
 
 * Basic configuration
 
-#+BEGIN_SRC toml :tangle ~/.etabli_config.toml :noweb yes
+#+BEGIN_SRC txt :tangle ~/.etabli_config.toml :noweb yes
 board_path = "~/.etabli_board"
 dmenu = "<<setup.org:dmenu()>>"
 hrule = " "
@@ -18,7 +18,7 @@ hrule = " "
 #+RESULTS:
 
 * Prepare
-#+BEGIN_SRC toml :tangle ~/.etabli_config.toml :noweb yes
+#+BEGIN_SRC txtg :tangle ~/.etabli_config.toml :noweb yes
 [prepare]
 firefox = "firefox"
 comms = ["thunderbird", "signal-desktop --password-store=gnome-libsecret", "chromium-browser https://naro.brute-force.eu/element/#/home"]

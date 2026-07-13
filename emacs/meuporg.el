@@ -6,7 +6,7 @@
 ;; Created: 2012-12-20
 ;; Version: 1.0
 ;; Keywords: project management, data centralisation
-;; URL: https://github.com/picarresursix/meuporg
+;; URL: https://github.com/lpp-crypto/meuporg
 ;; Compatibility:  GNU Emacs 28.x
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -23,14 +23,13 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-;;
 
 ;;; Commentary:
 ;;
 ;; Move this file somewhere in your emacs load-path. Then, add the following
 ;; to your .emacs file:
 ;; 
-;; (load-file meuporg.el)
+;; (load-file "meuporg.el")
 ;; 
 ;;; Issues:
 ;;
@@ -38,32 +37,11 @@
 ;; 
 ;;; Change Log:
 ;;
+;; 2026-01-18: Completely rewrote everything from scratch. Ditched
+;; some of the functionalities to replace them by better versions
+;; based on external packages.
+;;
 ;;; SECTION:
-
-
-(require 'ox)
-
-(defvar meuporg/font-faces
-  "Defines how the different items should be displayed in the
-  list of items.")
-(setq meuporg/font-faces
-      '(
-        ; action items
-        ("CONTINUE" . (:weight bold :foreground "#880066"))
-        ("TODO" . '(:foreground "#C00000"))
-        ("FIXME" . '(:foreground "#E08040"))
-        ("IMPROVE" . '(:foreground "#119922"))
-        ("CHECK" . '(:foreground "#004488"))
-        ; mode specific items
-        ("FIXREF" . '(:foreground "#AA9900"))))
-
-(defun meuporg/open-main()
-  "Open the meuporg of which the current file depends (if any)."
- )
-
-
-; !SUBSECTION! Inserting items
-
 
 (defun meuporg/insert-item(name)
   "Inserts an item with the given name in a new comment on a new
@@ -120,73 +98,42 @@ new comment is created."
   (interactive)
   (insert "!FIXREF! "))
 
-
-; !SUBSECTION! Navigating to items
-
-
-(defun meuporg/go-to-next-item()
-  "Moves cursor to the next item."
-  (interactive)
-  (condition-case ex
-      (search-forward-regexp "\![a-zA-Z0-9_]*\!")
-    ('error
-     (message "No items after cursor."))))
-
-(defun meuporg/go-to-previous-item()
-  "Moves cursor to the previous item."
-  (interactive)
-  (condition-case ex
-      (search-backward-regexp "\![a-zA-Z0-9_]*\!")
-    ('error
-     (message "No items before cursor."))))
-
-(defun meuporg/go-to-next-section()
-  "Moves cursor to the next highest level section."
-  (interactive)
-  (condition-case ex
-      (search-forward-regexp "\\(!SECTION!\\)\\|\\(^\\\\section{.*}\\)")
-    ('error
-     (message "No section after cursor."))))
-
-(defun meuporg/go-to-previous-section()
-  "Moves cursor to the next highest level section."
-  (interactive)
-  (condition-case ex
-      (search-backward-regexp "\\(!SECTION!\\)\\|\\(^\\\\section{.*}\\)")
-    ('error
-     (message "No section before cursor."))))
-
-
-
-
-; !SUBSECTION! Minor mode declaration
-
-
 (defface meuporg-content
-  '((t . (:weight semi-light :background "old lace" :foreground "black")))
+  '((t . (:weight semi-light :background "#f1f1f8" :foreground "black")))
   "A font for meuporg comments")
 
 (defface meuporg-label
-  '((t . (:weight bold :background "old lace" :foreground "brown")))
+  '((t . (:weight bold :background "#f1f1f8" :foreground "brown")))
   "A font for meuporg labels")
 
+(defun meuporg-fontlock()
+  (font-lock-add-keywords
+   nil
+   '(
+     ("^\\W*\\(!.*\\)" 1 'meuporg-content t)
+     ("!\\(\\w+\\)!" 1 'meuporg-label t)
+     ("!SECTION!\\(.*\\)" 1 'outline-1 t)
+     ("!SUBSECTION!\\(.*\\)" 1 'outline-2 t)
+     ("!SUBSUBSECTION!\\(.*\\)" 1 'outline-3 t)
+     ("!\\(TODO\\)!" 1 '(:background "white" :foreground "red3" :weight bold) prepend)
+     ("!\\(CONTINUE\\)!" 1 '(:background "white" :foreground "dark violet" :weight bold) prepend)
+     ("!\\(.*SECTION\\)!" 1 'structure-highlight t)))
+  (font-lock-add-keywords
+   'LaTeX-mode
+   '(
+     ("\\\\title{\\(.*\\)}" 1 'org-document-title prepend)
+     ("\\\\\\(title\\){" 1 'structure-highlight prepend)
+     ("\\\\\\(.*section\\){" 1 'structure-highlight prepend)
+     ("\\\\\\(paragraph\\){" 1 'structure-highlight prepend))))
 
 (defun meuporg-outline-level ()
   (- (match-end 0) (match-beginning 0)))
 
-
-(defun pi2-6-outline-minor-mode()
-  (interactive)
-  (when (not (string= major-mode "org-mode"))
-    (progn
-      (if (not (string= major-mode "LaTeX-mode"))
-          (setq-local outline-regexp ".*!\\(SUB\\)*SECTION!" )
-        (setq-local outline-regexp "\\\\\\(sub\\)*section{" outline-heading-end-regexp "}")
-        )
-      (setq-local outline-heading-end-regexp "\n" outline-level #'meuporg-outline-level )
-      (outline-minor-mode))))
-
-
+(defun meuporg-set-outline-regexp()
+  (if (not (string= major-mode "LaTeX-mode"))
+      (setq-local outline-regexp ".*!\\(SUB\\)*SECTION!" )
+    (setq-local outline-regexp "\\\\\\(sub\\)*section{" outline-heading-end-regexp "}"))
+  (setq-local outline-heading-end-regexp "\n" outline-level #'meuporg-outline-level))
 
 (define-minor-mode meuporg-minor-mode
     "Toggle meuporg mode.
@@ -215,67 +162,8 @@ new comment is created."
 
    ;; body of the initialization
    (when meuporg-minor-mode
-     (font-lock-add-keywords
-      nil
-      '(
-        ("^\\W*\\(!.*\\)" 1 'meuporg-content t)
-        ("!\\(\\w+\\)!" 1 'meuporg-label t)
-        ("!SECTION!\\(.*\\)" 1 'outline-1 t)
-        ("!SUBSECTION!\\(.*\\)" 1 'outline-2 t)
-        ("!SUBSUBSECTION!\\(.*\\)" 1 'outline-3 t)
-        ("!\\(TODO\\)!" 1 '(:background "white" :foreground "red3" :weight bold) prepend)
-        ("!\\(CONTINUE\\)!" 1 '(:background "white" :foreground "dark violet" :weight bold) prepend)
-        ("!\\(.*SECTION\\)!" 1 'structure-highlight t)))
-     (font-lock-add-keywords
-      'LaTeX-mode
-      '(
-        ("\\\\title{\\(.*\\)}" 1 'org-document-title prepend)
-        ("\\\\\\(title\\){" 1 'structure-highlight prepend)
-        ("\\\\\\(.*section\\){" 1 'structure-highlight prepend)
-        ("\\\\\\(paragraph\\){" 1 'structure-highlight prepend)
-        ))
-     (if (not (string= major-mode "LaTeX-mode"))
-         (setq-local outline-regexp ".*!\\(SUB\\)*SECTION!" )
-       (setq-local outline-regexp "\\\\\\(sub\\)*section{" outline-heading-end-regexp "}"))
-     (setq-local outline-heading-end-regexp "\n" outline-level #'meuporg-outline-level)))
+     (meuporg-fontlock)
+     (setopt org-num-face 'structure-highlight)
+     (meuporg-set-outline-regexp)))
 
-
-
-(defun meuporg-org-num-format-function (numbering)
-  (let ((num-and-formatter
-         (cl-mapcar #'list numbering
-                    '(org-export-number-to-roman
-                      number-to-string
-                      (lambda (n) (downcase (org-number-to-letters n)))
-                      number-to-string
-                      (lambda (n) (downcase (org-export-number-to-roman n)))
-                      number-to-string
-                      number-to-string
-                      number-to-string))))
-    (concat
-     (propertize (mapconcat (lambda (pair)
-                              (funcall (cadr pair) (car pair)))
-                            (butlast num-and-formatter)
-                            ".")
-                 'face '(:inherit structure-highlight :foreground "light gray"))
-     (propertize (concat
-                  " "
-                  (mapconcat (lambda (pair)
-                               (funcall (cadr pair) (car pair)))
-                             (last num-and-formatter)
-                             ".")
-                  ")")
-                 'face 'structure-highlight)
-     " ")))
-
-
-
-(setopt ;; org-num-face 'structure-highlight
-        org-num-format-function 'meuporg-org-num-format-function)
-
-(add-hook 'after-change-major-mode-hook
-          (lambda ()
-            (when (not (string= major-mode "org-mode"))
-              (meuporg-minor-mode))))
-
-
+(add-hook 'find-file-hook 'meuporg-minor-mode)

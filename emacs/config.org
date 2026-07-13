@@ -82,7 +82,7 @@ Compilation is then performed using =make=.
 
 ** Ensuring efficiency :attentionNeeded:
 Following the advice of the [[https://github.com/jamescherti/compile-angel.el][compile-angel]] developer, I start with the following. It ensures that all packages are compiled "natively" (i.e. into machine language), and that the resulting programs are used.
-
+ 
 This step requires for emacs to be compiled by hand with the appropriate option, as is done in [[*Custom compilation]].
 
 The initial comment is needed to remove a compilation warning (see e.g. [[https://github.com/agda/agda/issues/7730][this discussion on github]]).
@@ -139,10 +139,12 @@ The signature verification is disabled because of the OS on the desktop being to
 #+END_SRC
 ** Appearance
 *** Font
-Using [[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][fira code]] because it looks nice:
+Using [[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][fira code]] because it looks nice, alonk with [[https://github.com/source-foundry/Hack][Hack]] because Fira code doesn't have italics. Below (see [[*Ligatures]]), we activate the ligatures of =Fira Code=.
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'default-frame-alist '(font . "Fira Code" ))
-(set-face-attribute 'default t :font "Fira Code")
+  (add-to-list 'default-frame-alist '(font . "Fira Code" ))
+  (add-to-list 'default-frame-alist '(font . "Hack" ))
+  (set-face-attribute 'default nil :font "Fira Code")
+  (set-face-attribute 'italic nil :font "Hack")
 #+END_SRC
 
 *** Color theme

@@ -458,9 +458,7 @@ If we are not in an org-agenda-file, then the =org-open-at-mouse= function is ca
 
 (defun pi2-6/open-at-point()
   (interactive)
-  (if (and
-       (org-at-heading-p)
-       (member "ATTACH" (org-get-tags)))
+  (if (member "ATTACH" (org-get-tags))
       (if (member "images" (org-get-tags))
           (pi2-6/open-slide-show)
         (org-attach-open))
@@ -473,15 +471,13 @@ If we are not in an org-agenda-file, then the =org-open-at-mouse= function is ca
 
 (advice-add 'org-open-at-mouse :around
             (lambda (oldfun &rest args)
-              (if (and
-                   (org-at-heading-p)
-                   (member "ATTACH" (org-get-tags)))
+              (if (member "ATTACH" (org-get-tags))
                   (pi2-6/open-at-point)
                 (apply oldfun args))))
 
 (advice-add 'org-tags-view :around
             (lambda (oldfun &rest args)
-              (if (member "ATTACH" args)
+              (if (member "ATTACH" (org-get-tags))
                   (pi2-6/open-at-point)
                 (apply oldfun args))))
 #+END_SRC
@@ -1569,8 +1565,7 @@ ispell-local-dictionary)))
   (let ((proj-tags (remove "ongoingWork" (vulpea-note-tags proj)))
         (proj-title (vulpea-note-title proj))
         (proj-path (vulpea-note-path proj)))
-    (pi2-6/create-file-link proj-title proj-path proj-tags)))      
-
+    (pi2-6/create-file-link proj-title proj-path proj-tags)))
 
 (defun pi2-6/dashboard-ongoing ()
   "Creates a list of widget links by pulling all the notes tagged
@@ -1578,7 +1573,6 @@ ispell-local-dictionary)))
   (pi2-6/dashboard-header "Ongoing Work" 1)
   (mapcar 'pi2-6/create-project-link-widget
           (vulpea-db-query-by-tags-every '("ongoingWork"))))
-
 #+End_SRC
 
 *** Dotfiles

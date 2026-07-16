@@ -163,37 +163,9 @@ new comment is created."
    ;; body of the initialization
    (when meuporg-minor-mode
      (meuporg-fontlock)
-     (defun meuporg-org-num-format-function (numbering)
-  (let ((num-and-formatter
-         (cl-mapcar #'list numbering
-                    '(org-export-number-to-roman
-                      number-to-string
-                      (lambda (n) (downcase (org-number-to-letters n)))
-                      number-to-string
-                      (lambda (n) (downcase (org-export-number-to-roman n)))
-                      number-to-string
-                      number-to-string
-                      number-to-string))))
-    (concat
-     (propertize (mapconcat (lambda (pair)
-                              (funcall (cadr pair) (car pair)))
-                            (butlast num-and-formatter)
-                            ".")
-                 'face '(:inherit structure-highlight :foreground "light gray"))
-     (propertize (concat
-                  " "
-                  (mapconcat (lambda (pair)
-                               (funcall (cadr pair) (car pair)))
-                             (last num-and-formatter)
-                             ".")
-                  ")")
-                 'face 'structure-highlight)
-     " ")))
+     (setopt org-num-face 'structure-highlight)
+     (unless (derived-mode-p 'org-mode)
+       (meuporg-set-outline-regexp))))
 
-
-
-     (setopt ;; org-num-face 'structure-highlight
-      org-num-format-function 'meuporg-org-num-format-function)
-     (meuporg-set-outline-regexp)))
-
-(add-hook 'find-file-hook 'meuporg-minor-mode)
+(add-hook 'find-file-hook (lambda ()
+                            (meuporg-minor-mode)))

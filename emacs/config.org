@@ -285,6 +285,7 @@ links. It is annoying; the following gets rid of this ([[https://emacs.stackexch
           org-tags-column 10
           org-link-elisp-confirm-function nil
           org-ellipsis "⤵"
+          org-src-preserve-indentation t
           org-edit-src-content-indentation 0
           )
 #+END_SRC

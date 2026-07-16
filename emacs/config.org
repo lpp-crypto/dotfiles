@@ -1,5 +1,5 @@
 #+TITLE: Emacs Configuration
-#+START U: overview
+#+STARTUP: overview
 #+SETUPFILE: ../setup.org
 #+PROPERTY: header-args  :tangle ~/.emacs.el  :noweb yes
 
@@ -11,31 +11,31 @@ The emacs version bundled with ubuntu is not compiled with flags that I need, me
 First, we set the shebang and store the emacs version in an appropriate variable.
 
 #+BEGIN_SRC zsh :tangle install.zsh
-  #!/usr/bin/env zsh
+#!/usr/bin/env zsh
 
-  VERSION=30.2
+VERSION=30.2
 #+END_SRC
 
 Then, we check for the presence of the emacs executable, and simply exit if it is found: we don't need to do anything.
 
 #+BEGIN_SRC zsh :tangle install.zsh
-  if [[ -a ./emacs-$VERSION/src/emacs ]]; then
-      echo "emacs-$VERSION is already present, no need to download/compile it"
-      return
-  fi
+if [[ -a ./emacs-$VERSION/src/emacs ]]; then
+    echo "emacs-$VERSION is already present, no need to download/compile it"
+    return
+fi
 #+END_SRC
 
 ** Download (if necessary)
 Then, we ensure that we have the emacs version we want. This done by testing the presence of the appropriate folder. If it is not found, then we download the correct archive from an emacs mirror, and uncompress it.
 
 #+BEGIN_SRC zsh :tangle install.zsh
-  if [[ ! -a ./emacs-$VERSION ]]; then
-      echo "directory not found, downloading"
-      wget https://ftp.snt.utwente.nl/pub/software/gnu/emacs/emacs-$VERSION.tar.xz
-      tar -xvf ./emacs-$VERSION.tar.xz
-  else
-      echo "no need to download"
-  fi
+if [[ ! -a ./emacs-$VERSION ]]; then
+    echo "directory not found, downloading"
+    wget https://ftp.snt.utwente.nl/pub/software/gnu/emacs/emacs-$VERSION.tar.xz
+    tar -xvf ./emacs-$VERSION.tar.xz
+else
+    echo "no need to download"
+fi
 #+END_SRC
 ** Custom compilation
 Finally, we compile it. the compilation flags are a combination of the suggestions from https://www.reddit.com/r/emacs/comments/mh5l9y/comment/gsz2ey3/ (for wayland support) and https://www.rahuljuliato.com/posts/compiling_emacs_30_1 (for general image support), as well as, crucially, the flag enabling =treesitter= and native compilation.
@@ -45,80 +45,80 @@ I don't use treesitter yet but I want to have it as an option. I do rely heavily
 Compilation is then performed using =make=.
 
 #+BEGIN_SRC zsh :tangle install.zsh
-  cd emacs-$VERSION/
-  ./configure --with-native-compilation \
-                --with-tree-sitter \
-                --with-modules \
-                --with-threads \
-                --with-mailutils \
-                --with-gif \
-                --with-png \
-                --with-jpeg \
-                --with-rsvg \
-                --with-tiff \
-                --with-imagemagick \
-                --without-x \
-                --with-pgtk
-    make clean
-    make -j8
+cd emacs-$VERSION/
+./configure --with-native-compilation \
+            --with-tree-sitter \
+            --with-modules \
+            --with-threads \
+            --with-mailutils \
+            --with-gif \
+            --with-png \
+            --with-jpeg \
+            --with-rsvg \
+            --with-tiff \
+            --with-imagemagick \
+            --without-x \
+            --with-pgtk
+make clean
+make -j8
 #+END_SRC
 
 * Core setup
 
 #+BEGIN_SRC emacs-lisp 
-  ;;; -*- lexical-binding: t; -*- 
+;;; -*- lexical-binding: t; -*- 
 
-  (eval-when-compile (require 'use-package))
+(eval-when-compile (require 'use-package))
 #+END_SRC
 ** Use-package
   
 #+BEGIN_SRC emacs-lisp 
-  (require 'package)
-  (setopt package-check-signature nil)
-  (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-  (add-to-list 'package-archives '("melpa-backup" . "http://www.mirrorservice.org/sites/stable.melpa.org/packages/") t)
-  (require 'use-package)
+(require 'package)
+(setopt package-check-signature nil)
+(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa-backup" . "http://www.mirrorservice.org/sites/stable.melpa.org/packages/") t)
+(require 'use-package)
 #+END_SRC
 
 ** Ensuring efficiency :attentionNeeded:
 Following the advice of the [[https://github.com/jamescherti/compile-angel.el][compile-angel]] developer, I start with the following. It ensures that all packages are compiled "natively" (i.e. into machine language), and that the resulting programs are used.
-
+ 
 This step requires for emacs to be compiled by hand with the appropriate option, as is done in [[*Custom compilation]].
 
 The initial comment is needed to remove a compilation warning (see e.g. [[https://github.com/agda/agda/issues/7730][this discussion on github]]).
 
 #+BEGIN_SRC elisp
-  (use-package compile-angel
-    :ensure t
-    :demand t
-    
-    :config
-    ;; Set `compile-angel-verbose' to nil to disable compile-angel messages.
-    ;; (When set to nil, compile-angel won't show which file is being compiled.)
-    (setq compile-angel-verbose t)
+(use-package compile-angel
+  :ensure t
+  :demand t
+  
+  :config
+  ;; Set `compile-angel-verbose' to nil to disable compile-angel messages.
+  ;; (When set to nil, compile-angel won't show which file is being compiled.)
+  (setq compile-angel-verbose t)
 
-    ;; Uncomment the line below to compile automatically when an Elisp file is saved
-    ;; (add-hook 'emacs-lisp-mode-hook #'compile-angel-on-save-local-mode)
+  ;; Uncomment the line below to compile automatically when an Elisp file is saved
+  ;; (add-hook 'emacs-lisp-mode-hook #'compile-angel-on-save-local-mode)
 
-    ;; The following directive prevents compile-angel from compiling your init
-    ;; files. If you choose to remove this push to `compile-angel-excluded-files'
-    ;; and compile your pre/post-init files, ensure you understand the
-    ;; implications and thoroughly test your code. For example, if you're using
-    ;; the `use-package' macro, you'll need to explicitly add:
-    ;; (eval-when-compile (require 'use-package))
-    ;; at the top of your init file.
-    ;(push "~/.emacs.el" compile-angel-excluded-files)
+  ;; The following directive prevents compile-angel from compiling your init
+  ;; files. If you choose to remove this push to `compile-angel-excluded-files'
+  ;; and compile your pre/post-init files, ensure you understand the
+  ;; implications and thoroughly test your code. For example, if you're using
+  ;; the `use-package' macro, you'll need to explicitly add:
+  ;; (eval-when-compile (require 'use-package))
+  ;; at the top of your init file.
+                                        ;(push "~/.emacs.el" compile-angel-excluded-files)
 
-    ;; A global mode that compiles .el files before they are loaded
-    ;; using `load' or `require'.
-    (compile-angel-on-load-mode 1))
+  ;; A global mode that compiles .el files before they are loaded
+  ;; using `load' or `require'.
+  (compile-angel-on-load-mode 1))
 
-  ;; Ensure Emacs loads the most recent byte-compiled files.
-  (setopt load-prefer-newer t)
+;; Ensure Emacs loads the most recent byte-compiled files.
+(setopt load-prefer-newer t)
 
-  ;; Make Emacs Native-compile .elc files asynchronously by setting
-  ;; `native-comp-jit-compilation' to t.
-  (setopt native-comp-jit-compilation t)
+;; Make Emacs Native-compile .elc files asynchronously by setting
+;; `native-comp-jit-compilation' to t.
+(setopt native-comp-jit-compilation t)
 #+END_SRC
 ** Startup
 The inital-scratch-message is added by hand as it would just be added automatically otherwise. Miscellaneous appearance stuff follows:
@@ -129,20 +129,23 @@ The inital-scratch-message is added by hand as it would just be added automatica
 
 The signature verification is disabled because of the OS on the desktop being too old.
 #+BEGIN_SRC emacs-lisp 
-  (setopt initial-buffer-choice (lambda () (pi2-6/dashboard))
-          inhibit-startup-screen t)
+(setopt initial-buffer-choice (lambda () (pi2-6/dashboard))
+        inhibit-startup-screen t)
 
-  (menu-bar-mode -1) 
-  (tool-bar-mode -1)
-  (setq enable-local-variables :all)
-  (require 'cl-lib)
+(menu-bar-mode -1) 
+(tool-bar-mode -1)
+(setq enable-local-variables :all)
+(require 'cl-lib)
 #+END_SRC
 ** Appearance
 *** Font
-Using [[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][fira code]] because it looks nice:
+Using [[https://github.com/tonsky/FiraCode/wiki/Emacs-instructions][fira code]] because it looks nice, alonk with [[https://github.com/source-foundry/Hack][Hack]] because Fira code doesn't have italics. Activating the ligatures of =Fira Code= didn't work---at least not yet. The =ligature= package didn't help.
+
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'default-frame-alist '(font . "Fira Code" ))
-(set-face-attribute 'default t :font "Fira Code")
+(add-to-list 'default-frame-alist '(font . "Hack" ))
+(set-face-attribute 'default nil :font "Fira Code")
+(set-face-attribute 'italic nil :font "Hack")
 #+END_SRC
 
 *** Color theme
@@ -178,15 +181,15 @@ The current line is highlighted by being of a slightly different color.
 In order to make the cursor easier to find (e.g. when new emacs windows are opened, =beacon= can help (see [[https://github.com/Malabarba/beacon][its homepage]]). It is a package (that must be installed). The following activates the corresponding global mode, and ensures that the beacon blinks whenever the emacs window or the actual window is changed.
 
 #+BEGIN_SRC emacs-lisp 
-  (use-package beacon
-    :ensure t
-    :config
-    (beacon-mode)
-    (setq beacon-blink-when-window-changes t
-          beacon-blink-when-focused t
-          beacon-color "<<../setup.org:focus-color()>>"
-          beacon-size 15
-          beacon-blink-when-window-scrolls t))
+(use-package beacon
+  :ensure t
+  :config
+  (beacon-mode)
+  (setq beacon-blink-when-window-changes t
+        beacon-blink-when-focused t
+        beacon-color "<<../setup.org:focus-color()>>"
+        beacon-size 15
+        beacon-blink-when-window-scrolls t))
 #+END_SRC
 
 *** Mode line
@@ -195,15 +198,15 @@ The mode line is based on the [[https://gitlab.com/jessieh/mood-line][mood-line]
 The default setup is essentially straight from the documentation.
 
 #+BEGIN_SRC elisp
-  (use-package mood-line
-    :ensure t
-    
-    :config
-    (mood-line-mode)
+(use-package mood-line
+  :ensure t
+  
+  :config
+  (mood-line-mode)
 
-    ;; Use pretty Fira Code-compatible glyphs
-    :custom
-    (mood-line-glyph-alist mood-line-glyphs-fira-code))
+  ;; Use pretty Fira Code-compatible glyphs
+  :custom
+  (mood-line-glyph-alist mood-line-glyphs-fira-code))
 #+END_SRC
 
 We then improve upon the default appearance. The idea is to display more information than just the basic buffer name: the document title in an org document, or the full path to a file if the buffer corresponds to a file. Then, said path should be relative to a project root when relevant. Finally, the project name itself should be displayed prominently.
@@ -213,57 +216,57 @@ First, we need some functions to display path
 **** Path display
 
 #+BEGIN_SRC elisp
-  (defun pi2-6/mood-line-split-path()
-    (let ((full-path (file-name-split (buffer-file-name))))
-      (if (member "home" full-path)
-          (nthcdr
-           (length (file-name-split (expand-file-name "~")))
-           full-path)
-        full-path)))
+(defun pi2-6/mood-line-split-path()
+  (let ((full-path (file-name-split (buffer-file-name))))
+    (if (member "home" full-path)
+        (nthcdr
+         (length (file-name-split (expand-file-name "~")))
+         full-path)
+      full-path)))
 
 
-  (defun pi2-6/mood-line-pretty-path(split-path)
-    (s-concat
-     (when (< 1 (length split-path))
-       (propertize (s-concat
-                    " "
-                    (apply #'file-name-concat (butlast split-path)))
-                   'face 'mode-line-path))
-     (propertize (s-concat "/" (car (last split-path)) " ")
-                 'face 'mode-line-file-name)))
+(defun pi2-6/mood-line-pretty-path(split-path)
+  (s-concat
+   (when (< 1 (length split-path))
+     (propertize (s-concat
+                  " "
+                  (apply #'file-name-concat (butlast split-path)))
+                 'face 'mode-line-path))
+   (propertize (s-concat "/" (car (last split-path)) " ")
+               'face 'mode-line-file-name)))
 
 
-  (defun pi2-6/mood-line-title()
-    ; handling potential project name
-    (s-concat
-     (when (boundp 'meuporg-project-name)
-        (propertize (s-concat " " meuporg-project-name " ") 'face 'structure-highlight))
-     (cond 
-      ((string= major-mode "org-mode")
-       (propertize (s-concat " " (org-get-title) " ")
-                   'face '(:inherit 'org-document-title :height 0.5)))
-      ((string-match "\\*.*\\*" (buffer-name))
-       (propertize (s-concat " " (buffer-name) " ")
-                   'face 'mode-line-star-buffer))
-      ((boundp 'meuporg-project-name)
-       (pi2-6/mood-line-pretty-path (file-name-split (file-relative-name (buffer-file-name) (projectile-project-root)))))
-      ((buffer-file-name)
-       (pi2-6/mood-line-pretty-path (pi2-6/mood-line-split-path)))
-      (t
-        (buffer-name)))))
+(defun pi2-6/mood-line-title()
+                                        ; handling potential project name
+  (s-concat
+   (when (boundp 'meuporg-project-name)
+     (propertize (s-concat " " meuporg-project-name " ") 'face 'structure-highlight))
+   (cond 
+    ((string= major-mode "org-mode")
+     (propertize (s-concat " " (org-get-title) " ")
+                 'face '(:inherit 'org-document-title :height 0.5)))
+    ((string-match "\\*.*\\*" (buffer-name))
+     (propertize (s-concat " " (buffer-name) " ")
+                 'face 'mode-line-star-buffer))
+    ((boundp 'meuporg-project-name)
+     (pi2-6/mood-line-pretty-path (file-name-split (file-relative-name (buffer-file-name) (projectile-project-root)))))
+    ((buffer-file-name)
+     (pi2-6/mood-line-pretty-path (pi2-6/mood-line-split-path)))
+    (t
+     (buffer-name)))))
 
 
-    (setopt mood-line-format
-            '(
-              (#1=" " (mood-line-segment-modal) " "
-                  (or (mood-line-segment-buffer-status) " ") " "
-                  (pi2-6/mood-line-title) "  " (mood-line-segment-anzu)
-                  "  " (mood-line-segment-multiple-cursors) "  "
-                  (mood-line-segment-cursor-position) " "
-                  (mood-line-segment-scroll) "")
-              ((mood-line-segment-vc) "  " (mood-line-segment-major-mode) "  "
-               (mood-line-segment-misc-info) "  " (mood-line-segment-checker) "  "
-               (mood-line-segment-process) "  " #1#)))
+(setopt mood-line-format
+        '(
+          (#1=" " (mood-line-segment-modal) " "
+              (or (mood-line-segment-buffer-status) " ") " "
+              (pi2-6/mood-line-title) "  " (mood-line-segment-anzu)
+              "  " (mood-line-segment-multiple-cursors) "  "
+              (mood-line-segment-cursor-position) " "
+              (mood-line-segment-scroll) "")
+          ((mood-line-segment-vc) "  " (mood-line-segment-major-mode) "  "
+           (mood-line-segment-misc-info) "  " (mood-line-segment-checker) "  "
+           (mood-line-segment-process) "  " #1#)))
 #+END_SRC
 ** Scripts
 In order for this system to work well, the scripts in [[./helper-scripts/]] need to be copied somewhere in the path, execution rights added, and extension removed.
@@ -277,57 +280,57 @@ links. It is annoying; the following gets rid of this ([[https://emacs.stackexch
 * Org
 ** Common settings
 #+BEGIN_SRC elisp
-  (setopt org-startup-indented t
-          org-pretty-entities t
-          org-hide-emphasis-markers t
-          org-startup-with-inline-images t
-          org-image-actual-width '(300)
-          org-tags-column 10
-          org-link-elisp-confirm-function nil
-          org-ellipsis "⤵"
-          org-src-preserve-indentation t
-          org-edit-src-content-indentation 0
-          )
+(setopt org-startup-indented t
+        org-pretty-entities t
+        org-hide-emphasis-markers t
+        org-startup-with-inline-images t
+        org-image-actual-width '(300)
+        org-tags-column 10
+        org-link-elisp-confirm-function nil
+        org-ellipsis "⤵"
+        ;; org-src-preserve-indentation t
+        org-edit-src-content-indentation 0
+        )
 #+END_SRC
 
 It is possible to ensure that LaTeX is always rendered by setting =org-startup-with-latex-preview= to =t=, but this has a significant time penalty. Better not to.
 Requiring =org-mouse= ensures that we can fold/unfold org-headings by clicking on the markers.
 
 #+BEGIN_SRC elisp
-  ;; (use-package org-superstar
-  ;;   :ensure t
-  ;;   )
+;; (use-package org-superstar
+;;   :ensure t
+;;   )
 
-  (use-package org-fragtog
-    :ensure t
+(use-package org-fragtog
+  :ensure t
 
-    :after org
+  :after org
 
-    :custom
-    (org-startup-with-latex-preview nil)
+  :custom
+  (org-startup-with-latex-preview nil)
 
-    :custom
-    (org-format-latex-options
-     (plist-put org-format-latex-options :scale 1.5)
-     (plist-put org-format-latex-options :foreground 'auto)
-     (plist-put org-format-latex-options :background 'auto))
-    )
+  :custom
+  (org-format-latex-options
+   (plist-put org-format-latex-options :scale 1.5)
+   (plist-put org-format-latex-options :foreground 'auto)
+   (plist-put org-format-latex-options :background 'auto))
+  )
 
-  (use-package org
-    :ensure t
-    
-    :mode
-    (("\\.org$" . org-mode))
-    
-    :hook
-    (org-mode . (lambda ()
-                  (org-fragtog-mode)
-                  ;(org-superstar-mode)
-                  (org-num-mode)))
-    )
+(use-package org
+  :ensure t
+  
+  :mode
+  (("\\.org$" . org-mode))
+  
+  :hook
+  (org-mode . (lambda ()
+                (org-fragtog-mode)
+                                        ;(org-superstar-mode)
+                (org-num-mode)))
+  )
 
-  (require 'org-mouse)
-  (require 'org-attach)
+(require 'org-mouse)
+(require 'org-attach)
 #+END_SRC
 ** Better ids
 #+BEGIN_SRC elisp
@@ -347,84 +350,84 @@ The idea is to have mere annotations in files that are not intended to help with
 A permanent list of tags is specified first. It has to be set with =setopt=, otherwise it doesn't work.
 
 #+BEGIN_SRC elisp
-  (setopt org-tag-persistent-alist
-         '((:startgroup)
-           ("state")
-           (:grouptags)
-           ("ongoingWork" . ?o)
-           ("attentionNeeded" . ?n)
-           ("stable" . ?s)
-           ("hack" . ?h)
-           (:endgroup)
-           (:startgroup)
-           ("type")
-           (:grouptags)
-           ("paper" . ?a)
-           ("people" . ?e)
-           ("project" . ?r)
-           (:endgroup)
-           (:startgrouptag)
-           ("mine")
-           ("sok")
-           (:endgrouptag)
-           ))
+(setopt org-tag-persistent-alist
+        '((:startgroup)
+          ("state")
+          (:grouptags)
+          ("ongoingWork" . ?o)
+          ("attentionNeeded" . ?n)
+          ("stable" . ?s)
+          ("hack" . ?h)
+          (:endgroup)
+          (:startgroup)
+          ("type")
+          (:grouptags)
+          ("paper" . ?a)
+          ("people" . ?e)
+          ("project" . ?r)
+          (:endgroup)
+          (:startgrouptag)
+          ("mine")
+          ("sok")
+          (:endgrouptag)
+          ))
 #+END_SRC
 
 Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It simply describes which face to use for each of these tags.
 
 #+BEGIN_SRC elisp
-  (setopt org-tag-faces
-          '(
-            ("ATTACH" . 'org-link)
+(setopt org-tag-faces
+        '(
+          ("ATTACH" . 'org-link)
 
-            ("ongoingWork" . (:background "yellow" :foreground "dim gray"))
-            ("attentionNeeded" . (:background "orange" :foreground "dim gray"))
-            ("stable" . (:foreground "chartreuse2"))
-            ("hack" . (:foreground "tomato"))
+          ("ongoingWork" . (:background "yellow" :foreground "dim gray"))
+          ("attentionNeeded" . (:background "orange" :foreground "dim gray"))
+          ("stable" . (:foreground "chartreuse2"))
+          ("hack" . (:foreground "tomato"))
 
-            ("review" . (:background "gray" :foreground "white"))
-            ("short" . (:background "dark orange" :foreground "white"))
-            ("orga" . (:background "tan4" :foreground "white"))
-            ("bullshit" . (:background "black" :foreground "white"))
-            ("research" . (:background "chartreuse4" :foreground "white"))
-            ("programming" . (:background "blue" :foreground "white"))
+          ("review" . (:background "gray" :foreground "white"))
+          ("short" . (:background "dark orange" :foreground "white"))
+          ("orga" . (:background "tan4" :foreground "white"))
+          ("bullshit" . (:background "black" :foreground "white"))
+          ("research" . (:background "chartreuse4" :foreground "white"))
+          ("programming" . (:background "blue" :foreground "white"))
 
-            
-            ("mine" . (:background "black" :foreground "white" :distant-foreground "black"))
-            ("sok" . (:background "white" :foreground "red"))
+          
+          ("mine" . (:background "black" :foreground "white" :distant-foreground "black"))
+          ("sok" . (:background "white" :foreground "red"))
 
-            ("sym" . (:background "sandy brown" :foreground "black" :distant-foreground "black" ))
-            ("math" . (:background "tan" :foreground "black"))
-            ("mode" . (:background "magenta" :foreground "black"))
-            ("advPro" . (:background "sienna" :foreground "black"))
+          ("sym" . (:background "sandy brown" :foreground "black" :distant-foreground "black" ))
+          ("math" . (:background "tan" :foreground "black"))
+          ("mode" . (:background "magenta" :foreground "black"))
+          ("advPro" . (:background "sienna" :foreground "black"))
 
-            ("stap" . (:background "blue" :foreground "white" :distant-foreground "white"))
-            ("light" . (:background "cyan" :foreground "white" :distant-foreground  "sienna"))
-            ("tfhe" . (:background "light coral" :foreground "black"))
-            ("mpc" . (:background "rosy brown" :foreground "black"))
-            ("zk" . (:background "coral" :foreground "black"))
-            ("fhe" . (:background "tomato" :foreground "black"))
-            ("sbox" . (:background "dark violet" :foreground "white" :distant-foreground "dark violet"))
-            ("apn" . (:background "cyan" :foreground "black"))
-            ("ccz" . (:background "steel blue" :foreground "white" :distant-foreground "steel blue"))
-            ("posso" . (:background "chartreuse" :foreground "black"))
-            ("differential" . (:background "green" :foreground "white" :distant-foreground "green" ))
-            ("linear" . (:background "lime green" :foreground "black"))
-            ("subspace" . (:background "medium spring green" :foreground "black"))
-            
-            ))
+          ("stap" . (:background "blue" :foreground "white" :distant-foreground "white"))
+          ("light" . (:background "cyan" :foreground "white" :distant-foreground  "sienna"))
+          ("tfhe" . (:background "light coral" :foreground "black"))
+          ("mpc" . (:background "rosy brown" :foreground "black"))
+          ("zk" . (:background "coral" :foreground "black"))
+          ("fhe" . (:background "tomato" :foreground "black"))
+          ("sbox" . (:background "dark violet" :foreground "white" :distant-foreground "dark violet"))
+          ("apn" . (:background "cyan" :foreground "black"))
+          ("ccz" . (:background "steel blue" :foreground "white" :distant-foreground "steel blue"))
+          ("posso" . (:background "chartreuse" :foreground "black"))
+          ("differential" . (:background "green" :foreground "white" :distant-foreground "green" ))
+          ("linear" . (:background "lime green" :foreground "black"))
+          ("subspace" . (:background "medium spring green" :foreground "black"))
+          
+          ))
 
 #+END_SRC
 
 In order to allow the use off different colors in file vaults, it is possible to specify a local set of colors in the =dir-locals= file by creating a variable called =local-org-tag-faces=. Its content is added to the main =org-tag-faces= by the following snippet which was surprisingly hard to write. Indeed, =dir-locals= variables are only set *after* the major mode is setup. As a consequence, using its content requires the use of a later hook.
 
 #+BEGIN_SRC elisp
-  (add-hook
-   'after-change-major-mode-hook
-   (lambda ()
-     (if (boundp 'local-org-tag-faces)
-         (setopt org-tag-faces (append org-tag-faces local-org-tag-faces))))
-   )
+(add-hook
+ 'after-change-major-mode-hook
+ (lambda ()
+   (if (boundp 'local-org-tag-faces)
+       (setopt org-tag-faces (append org-tag-faces local-org-tag-faces))))
+ )
 #+END_SRC
 
 *** Opening image folders
@@ -436,10 +439,10 @@ The options are
 - sf :: to have the pictures fill the available space without having their geometry altered.
 
 #+BEGIN_SRC elisp
-  (defun pi2-6/open-slide-show()
-    "Assuming the attached data is a folder containing pictures,
-  starts a slideshow with all of those."
-    (call-process-shell-command (format "sxiv -r -S 3 -p -sf '%s' &" (org-attach-dir))))
+(defun pi2-6/open-slide-show()
+  "Assuming the attached data is a folder containing pictures,
+starts a slideshow with all of those."
+  (call-process-shell-command (format "sxiv -r -S 3 -p -sf '%s' &" (org-attach-dir))))
 #+END_SRC 
 
 ** Attach enhancement
@@ -452,36 +455,32 @@ When clicking on a tag, the function =org-tags-view= is called if we are in an o
 If we are not in an org-agenda-file, then the =org-open-at-mouse= function is called. Same advice is applied.
 
 #+BEGIN_SRC elisp
-  (require 'org)
+(require 'org)
 
-  (defun pi2-6/open-at-point()
-    (interactive)
-    (if (and
-         (org-at-heading-p)
-         (member "ATTACH" (org-get-tags)))
-        (if (member "images" (org-get-tags))
-            (pi2-6/open-slide-show)
-          (org-attach-open))
-      (if (string= major-mode "org-mode")
-          (condition-case nil 
-              (call-interactively 'org-open-at-point)
-            (error (find-file-at-point)))
-        (find-file-at-point))))
+(defun pi2-6/open-at-point()
+  (interactive)
+  (if (member "ATTACH" (org-get-tags))
+      (if (member "images" (org-get-tags))
+          (pi2-6/open-slide-show)
+        (org-attach-open))
+    (if (string= major-mode "org-mode")
+        (condition-case nil 
+            (call-interactively 'org-open-at-point)
+          (error (find-file-at-point)))
+      (find-file-at-point))))
 
 
-  (advice-add 'org-open-at-mouse :around
-              (lambda (oldfun &rest args)
-                (if (and
-                     (org-at-heading-p)
-                     (member "ATTACH" (org-get-tags)))
-                    (pi2-6/open-at-point)
-                    (apply oldfun args))))
+(advice-add 'org-open-at-mouse :around
+            (lambda (oldfun &rest args)
+              (if (member "ATTACH" (org-get-tags))
+                  (pi2-6/open-at-point)
+                (apply oldfun args))))
 
-  (advice-add 'org-tags-view :around
-              (lambda (oldfun &rest args)
-                (if (member "ATTACH" args)
-                      (pi2-6/open-at-point)
-                  (apply oldfun args))))
+(advice-add 'org-tags-view :around
+            (lambda (oldfun &rest args)
+              (if (member "ATTACH" (org-get-tags))
+                  (pi2-6/open-at-point)
+                (apply oldfun args))))
 #+END_SRC
 
 We also need the following to be able to open attachments with better-ids.
@@ -503,17 +502,17 @@ the rest; the leading character of the rest being dropped."
           org-attach-id-uuid-folder-format
           org-attach-id-ts-folder-format
           org-attach-id-fallback-folder-format))
- #+END_SRC
+#+END_SRC
  
 ** Org babel
 We need to enable the languages in babel. This is done as follows ([[https://emacs-orgmode.gnu.narkive.com/hmJIUIeQ/o-bug-org-babel-execute-src-block-no-org-babel-execute-function-for-python][source]]).
 #+BEGIN_SRC emacs-lisp
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((python . t)
-     (C . t)
-     (shell . t)
-     (dot . t)))
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (C . t)
+   (shell . t)
+   (dot . t)))
 #+END_SRC
 
 
@@ -526,23 +525,23 @@ Some more tweaks are needed though, in particular we need to tell org-mode to us
 Now that org-babel is setup, we can define the following function which tangles this file and then compiles the result. Useful when a change is made but we don't want to re-tangle all the files in this repository (meaning, running the [[../readme.org::*Updating configuration]] script).
 
 #+BEGIN_SRC emacs-lisp
-  (defun pi2-6/reset-config()
-    (interactive)
-    (with-current-buffer (find-file-noselect (file-truename "~/dotfiles/emacs/config.org"))
-      (org-babel-tangle))
-    (native-compile "~/.emacs.el"))
+(defun pi2-6/reset-config()
+  (interactive)
+  (with-current-buffer (find-file-noselect (file-truename "~/dotfiles/emacs/config.org"))
+    (org-babel-tangle))
+  (native-compile "~/.emacs.el"))
 #+END_SRC
 
 ** Vulpea
 (vulpea-db-sync-full-scan)
 #+BEGIN_SRC elisp
-  (use-package vulpea
-    :ensure t
-    :config
-    (setopt vulpea-db-sync-directories '("~/roam/"))
-    (setopt vulpea-default-notes-directory "~/roam/")
-    ;; (setopt vulpea-db-sync-external-method 'auto)
-    (vulpea-db-autosync-mode +1))
+(use-package vulpea
+  :ensure t
+  :config
+  (setopt vulpea-db-sync-directories '("~/roam/"))
+  (setopt vulpea-default-notes-directory "~/roam/")
+  ;; (setopt vulpea-db-sync-external-method 'auto)
+  (vulpea-db-autosync-mode +1))
 
 #+END_SRC
 
@@ -558,59 +557,59 @@ The capture templates are intended to send the notes in the correct folders, and
 
 
 #+BEGIN_SRC elisp
-  (defun pi2-6/capture-paper(title)
-    "Capture a paper"
-    (interactive "sPaper title: ")
-    (vulpea-visit (vulpea-create title
-                                 "papers/${timestamp}_${slug}.org"
-                                 :tags '("paper"))))
+(defun pi2-6/capture-paper(title)
+  "Capture a paper"
+  (interactive "sPaper title: ")
+  (vulpea-visit (vulpea-create title
+                               "papers/${timestamp}_${slug}.org"
+                               :tags '("paper"))))
 
-  (defun pi2-6/capture-library(title)
-    "Capture a note for the library"
-    (interactive "sNote title: ")
-    (vulpea-visit (vulpea-create title
-                                 "library/${timestamp}_${slug}.org"
-                                 :body "* Notes"
-                                 :tags '("note"))))
+(defun pi2-6/capture-library(title)
+  "Capture a note for the library"
+  (interactive "sNote title: ")
+  (vulpea-visit (vulpea-create title
+                               "library/${timestamp}_${slug}.org"
+                               :body "* Notes"
+                               :tags '("note"))))
 
-  (defun pi2-6/capture-project(title)
-    "Capture a note for a project"
-    (interactive "sProject title: ")
-    (vulpea-visit (vulpea-create title
-                                 "projects/${timestamp}_${slug}.org"
-                                 :head "#+MEUPFOLDER: "
-                                 :body "* Diary  :noexport:"
-                                 :tags '("ongoingWork"))))
+(defun pi2-6/capture-project(title)
+  "Capture a note for a project"
+  (interactive "sProject title: ")
+  (vulpea-visit (vulpea-create title
+                               "projects/${timestamp}_${slug}.org"
+                               :head "#+MEUPFOLDER: "
+                               :body "* Diary  :noexport:"
+                               :tags '("ongoingWork"))))
 
-  (defun pi2-6/capture-review(title)
-    "Capture a review"
-    (interactive "sReviewed paper title: ")
-    (vulpea-visit (vulpea-create (format "%s (review)" title)
-                                 "reviews/${timestamp}_${slug}.org"
-                                 :tags '("ongoingWork" "review")
-                                 :body "- DEADLINE :: \n\n* Files\n** main pdf\n* Diary  :noexport:"
-                                 )))
-
-
-  (defun pi2-6/capture-experiment(title)
-    "Capture an experiment"
-    (interactive "sExperiment title: ")
-    (vulpea-visit (vulpea-create (format "%s" title)
-                                 "experiments/${timestamp}_${slug}.org"
-                                 :tags '("ongoingWork" "experiment")
-                                 :body (format "\n- DATE :: [%s]\n\n* Notebook\n#+BEGIN_SRC\n\n#+END_SRC\n\n* Diary  :noexport:" (format-time-string
-                                                        (car org-timestamp-formats) (current-time))))))
+(defun pi2-6/capture-review(title)
+  "Capture a review"
+  (interactive "sReviewed paper title: ")
+  (vulpea-visit (vulpea-create (format "%s (review)" title)
+                               "reviews/${timestamp}_${slug}.org"
+                               :tags '("ongoingWork" "review")
+                               :body "- DEADLINE :: \n\n* Files\n** main pdf\n* Diary  :noexport:"
+                               )))
 
 
-  (defun pi2-6/finalize-current-note()
-    "Sets a finished date and adjusts the tags to state the current note does not require any further work"
-    (interactive)
-    (vulpea-buffer-meta-set
-     "FINISHED"
-     (format "[%s]"
-             (format-time-string (car org-timestamp-formats) (current-time))))
-    (vulpea-buffer-tags-remove "ongoingWork")
-    (vulpea-buffer-tags-add "stable"))
+(defun pi2-6/capture-experiment(title)
+  "Capture an experiment"
+  (interactive "sExperiment title: ")
+  (vulpea-visit (vulpea-create (format "%s" title)
+                               "experiments/${timestamp}_${slug}.org"
+                               :tags '("ongoingWork" "experiment")
+                               :body (format "\n- DATE :: [%s]\n\n* Notebook\n#+BEGIN_SRC\n\n#+END_SRC\n\n* Diary  :noexport:" (format-time-string
+                                                                                                                                (car org-timestamp-formats) (current-time))))))
+
+
+(defun pi2-6/finalize-current-note()
+  "Sets a finished date and adjusts the tags to state the current note does not require any further work"
+  (interactive)
+  (vulpea-buffer-meta-set
+   "FINISHED"
+   (format "[%s]"
+           (format-time-string (car org-timestamp-formats) (current-time))))
+  (vulpea-buffer-tags-remove "ongoingWork")
+  (vulpea-buffer-tags-add "stable"))
 
 #+END_SRC
 
@@ -619,107 +618,107 @@ The capture templates are intended to send the notes in the correct folders, and
 
 #+BEGIN_SRC elisp
 
-   (defun pi2-6/find-ongoingWork()
-     "Selects a vulpea note with the ongoingWork tag"
-     (interactive)
-     (vulpea-visit (vulpea-select-from "to visit: "
-                                       (vulpea-db-query-by-tags-some '("ongoingWork")))))
+(defun pi2-6/find-ongoingWork()
+  "Selects a vulpea note with the ongoingWork tag"
+  (interactive)
+  (vulpea-visit (vulpea-select-from "to visit: "
+                                    (vulpea-db-query-by-tags-some '("ongoingWork")))))
 
-  (defun pi2-6/find-paper()
-    "Find a paper within the vulpea/roam directory"
-    (interactive)
-    (vulpea-visit (vulpea-select-from "Select paper" (vulpea-db-query-by-tags-every '("paper")))))
+(defun pi2-6/find-paper()
+  "Find a paper within the vulpea/roam directory"
+  (interactive)
+  (vulpea-visit (vulpea-select-from "Select paper" (vulpea-db-query-by-tags-every '("paper")))))
 
 
-  (defun pi2-6/find-attachment()
-    "Find an attachment within the vulpea/roam directory"
-    (interactive)
-    (vulpea-visit (vulpea-select-from "Select attachment" (vulpea-db-query-by-tags-every '("attach")))))
+(defun pi2-6/find-attachment()
+  "Find an attachment within the vulpea/roam directory"
+  (interactive)
+  (vulpea-visit (vulpea-select-from "Select attachment" (vulpea-db-query-by-tags-every '("attach")))))
 
-  (defun pi2-6/vulpea-nuke-db()
-    "Clears the vulpea database and recompute it from scratch"
-    (interactive)
-    (vulpea-db-clear)
-    (vulpea-db-sync-full-scan))
+(defun pi2-6/vulpea-nuke-db()
+  "Clears the vulpea database and recompute it from scratch"
+  (interactive)
+  (vulpea-db-clear)
+  (vulpea-db-sync-full-scan))
 #+END_SRC
 
-  The selection function is then a simple =transient= function.
+The selection function is then a simple =transient= function.
 
-  #+BEGIN_SRC elisp
-     (require 'transient)
+#+BEGIN_SRC elisp
+(require 'transient)
 
-     (transient-define-prefix pi2-6/vulpea-action()
-       "What to capture?"
-       [("f" "[f]find" vulpea-find)
-        ("g" "find on[g]oingWork" pi2-6/find-ongoingWork)
-        ("p" "new [p]aper" pi2-6/capture-paper)
-        ("e" "new [e]xperiment" pi2-6/capture-experiment)
-        ("l" "new [l]ibrary entry" pi2-6/capture-library)
-        ("o" "new pr[o]ject entry" pi2-6/capture-project)
-        ("r" "new [r]eview" pi2-6/capture-review)
-        ("i" "grab l[i]nk" vulpea-insert)
-        ("z" "finali[z]e current note" pi2-6/finalize-current-note)
-        ("u" "[u]pdate db for this file" vulpea-db-sync-update-file)
-        ("n" "[n]uke db and recompute it" pi2-6/vulpea-nuke-db)
-         ])
+(transient-define-prefix pi2-6/vulpea-action()
+  "What to capture?"
+  [("f" "[f]find" vulpea-find)
+   ("g" "find on[g]oingWork" pi2-6/find-ongoingWork)
+   ("p" "new [p]aper" pi2-6/capture-paper)
+   ("e" "new [e]xperiment" pi2-6/capture-experiment)
+   ("l" "new [l]ibrary entry" pi2-6/capture-library)
+   ("o" "new pr[o]ject entry" pi2-6/capture-project)
+   ("r" "new [r]eview" pi2-6/capture-review)
+   ("i" "grab l[i]nk" vulpea-insert)
+   ("z" "finali[z]e current note" pi2-6/finalize-current-note)
+   ("u" "[u]pdate db for this file" vulpea-db-sync-update-file)
+   ("n" "[n]uke db and recompute it" pi2-6/vulpea-nuke-db)
+   ])
 #+END_SRC
 
 ** Org links
   
 #+BEGIN_SRC elisp
-  (setopt file-apps
-          '(
-            ("\\.pdf" . "evince '%s'")
-            ("\\.mp4" . "vlc '%s'")
-            ("\\.mpeg" . "vlc '%s'")
-            ("\\.webm" . "vlc '%s'")
+(setopt file-apps
+        '(
+          ("\\.pdf" . "evince '%s'")
+          ("\\.mp4" . "vlc '%s'")
+          ("\\.mpeg" . "vlc '%s'")
+          ("\\.webm" . "vlc '%s'")
 
-            ("\\.png" . "sxiv '%s'")
-            ("\\.jpg" . "sxiv '%s'")
-            ("\\.jpeg" . "sxiv '%s'")
+          ("\\.png" . "sxiv '%s'")
+          ("\\.jpg" . "sxiv '%s'")
+          ("\\.jpeg" . "sxiv '%s'")
 
-            ("\\.doc" . "libreoffice '%s'")
-            ("\\.docx" . "libreoffice '%s'")
-            ("\\.ods" . "libreoffice '%s'")
-            ("\\.xls" . "libreoffice '%s'")
-            ("\\.xlsx" . "libreoffice '%s'")
-            ("\\.ppt" . "libreoffice '%s'")
-            ("\\.pptx" . "libreoffice '%s'")
-            ))
+          ("\\.doc" . "libreoffice '%s'")
+          ("\\.docx" . "libreoffice '%s'")
+          ("\\.ods" . "libreoffice '%s'")
+          ("\\.xls" . "libreoffice '%s'")
+          ("\\.xlsx" . "libreoffice '%s'")
+          ("\\.ppt" . "libreoffice '%s'")
+          ("\\.pptx" . "libreoffice '%s'")
+          ))
 
-  (setopt org-file-apps
-          (-concat '((auto-mode . emacs)
-                     ("\\.mm\\'" . default)
-                     ("\\.x?html?\\'" . default)
-                     ("\\.pdf::#\\([0-9]+\\)?" . "evince '%s' -i %1")
-                     ("\\.pdf::\\([a-zA-Z0-9,.; ]+\\)?" . "evince '%s' -l \"%1\""))
-                   file-apps))
+(setopt org-file-apps
+        (-concat '((auto-mode . emacs)
+                   ("\\.mm\\'" . default)
+                   ("\\.x?html?\\'" . default)
+                   ("\\.pdf::#\\([0-9]+\\)?" . "evince '%s' -i %1")
+                   ("\\.pdf::\\([a-zA-Z0-9,.; ]+\\)?" . "evince '%s' -l \"%1\""))
+                 file-apps))
 
 
-  (setopt org-link-frame-setup
-          '((vm . vm-visit-folder-other-frame)
-            (vm-imap . vm-visit-imap-folder-other-frame)
-            (gnus . org-gnus-no-new-news)
-            (file . find-file)
-            (wl . wl-other-frame)))
+(setopt org-link-frame-setup
+        '((vm . vm-visit-folder-other-frame)
+          (vm-imap . vm-visit-imap-folder-other-frame)
+          (gnus . org-gnus-no-new-news)
+          (file . find-file)
+          (wl . wl-other-frame)))
 
-  ;; (setopt dired-guess-shell-alist-user
-  ;;         '(
-  ;;           ("\\.pdf\\'" "evince")
-  ;;           ))
-          ;; (mapcar (lambda (assoc) (list (car assoc) `(format (cdr ,assoc) file)))
-          ;;        file-apps))
+;; (setopt dired-guess-shell-alist-user
+;;         '(
+;;           ("\\.pdf\\'" "evince")
+;;           ))
+;; (mapcar (lambda (assoc) (list (car assoc) `(format (cdr ,assoc) file)))
+;;        file-apps))
 
-  (defun pi2-6/open-externally-maybe (filename &rest _)
-    "Checks if the file extension is in org-file-apps, and
-  if yes then runs the corresponding program."
-    (when-let ((match (seq-find (lambda (assoc)
-                                  (string-match-p (car assoc) filename))
-                                file-apps)))
-      (call-process-shell-command (s-concat (format (cdr match) filename) " &"))
-      t))
+(defun pi2-6/open-externally-maybe (filename &rest _)
+  "Checks if the file extension is in org-file-apps, and
+if yes then runs the corresponding program."
+  (when-let ((match (seq-find (lambda (assoc)
+                                (string-match-p (car assoc) filename))
+                              file-apps)))
+    (call-process-shell-command (s-concat (format (cdr match) filename) " &"))
+    t))
 
-  (advice-add 'find-file :before-until #'pi2-6/open-externally-maybe)
+(advice-add 'find-file :before-until #'pi2-6/open-externally-maybe)
 #+END_SRC
 
 
@@ -732,18 +731,18 @@ First, we need to specify where to look for TODO items. These are stored in org-
 The code exracting ongoing work from the vulpea/roam folder is easy to write.
 
 #+BEGIN_SRC emacs-lisp
-  (defun pi2-6/set-org-agenda-files ()
-    "Set org-agenda-files to be a list containing the names of the files
-  corresponding to org-roam nodes with the ongoingWork tag."
-    (interactive)
-    (setopt
-     org-agenda-files
-     (-uniq (mapcar 'vulpea-note-path (vulpea-db-query-by-tags-every '("ongoingWork"))))))
+(defun pi2-6/set-org-agenda-files ()
+  "Set org-agenda-files to be a list containing the names of the files
+corresponding to org-roam nodes with the ongoingWork tag."
+  (interactive)
+  (setopt
+   org-agenda-files
+   (-uniq (mapcar 'vulpea-note-path (vulpea-db-query-by-tags-every '("ongoingWork"))))))
 
-  (pi2-6/set-org-agenda-files)
+(pi2-6/set-org-agenda-files)
 #+END_SRC
 
-    (consult-org-agenda "TODO=\"TODO\"")
+(consult-org-agenda "TODO=\"TODO\"")
 *** TODO Customizing org-agenda view :ongoingWork:
 Then, we need to configure what is displayed.
 
@@ -759,42 +758,42 @@ Each agenda view is set by calling a function (e.g. =agenda=), followed by some 
 There seems to be a complication: =tags-todo= cannot display a deadline. I will have to it differently for reviews.
 
 #+BEGIN_SRC elisp :tangle no
-  (defun my/org-agenda-get-file-title (file)
-    "Get #+title: from FILE."
-    (with-current-buffer (find-file-noselect file)
-      (or (cadr (assoc "TITLE" (org-collect-keywords '("title"))))
-          (file-name-nondirectory file))))
+(defun my/org-agenda-get-file-title (file)
+  "Get #+title: from FILE."
+  (with-current-buffer (find-file-noselect file)
+    (or (cadr (assoc "TITLE" (org-collect-keywords '("title"))))
+        (file-name-nondirectory file))))
 
-  (my/org-agenda-get-file-title "~/roam/library/20251016155324-arion.org")
+(my/org-agenda-get-file-title "~/roam/library/20251016155324-arion.org")
 
-  (defun my/org-agenda-prefix-with-title ()
-    "Return prefix with file title."
-    (let* ((file (buffer-file-name (org-base-buffer (current-buffer))))
-           (title (when file (my/org-agenda-get-file-title file))))
-      (propertize (format "%-15s" (or title "")) 'face 'bold)))
+(defun my/org-agenda-prefix-with-title ()
+  "Return prefix with file title."
+  (let* ((file (buffer-file-name (org-base-buffer (current-buffer))))
+         (title (when file (my/org-agenda-get-file-title file))))
+    (propertize (format "%-15s" (or title "")) 'face 'bold)))
 
-  ;; (setopt org-agenda-prefix-format
-  ;;         '((agenda . "%-12:c%?-12t% s")
-  ;;           (todo . "%(my/org-agenda-prefix-with-title) %-20:b")
-  ;;           (tags . "%-12:c")
-  ;;           (search . " %i %-12:c")))
+;; (setopt org-agenda-prefix-format
+;;         '((agenda . "%-12:c%?-12t% s")
+;;           (todo . "%(my/org-agenda-prefix-with-title) %-20:b")
+;;           (tags . "%-12:c")
+;;           (search . " %i %-12:c")))
 
-   (setopt org-agenda-prefix-format
-      '((agenda . " %i %-12:c%?-12t% s")
-        (todo   . "%(my/org-agenda-prefix-with-title)")
-        (tags   . " %i %-12:c")
-        (search . " %i %-12:c")))
+(setopt org-agenda-prefix-format
+        '((agenda . " %i %-12:c%?-12t% s")
+          (todo   . "%(my/org-agenda-prefix-with-title)")
+          (tags   . " %i %-12:c")
+          (search . " %i %-12:c")))
 
-  (setopt org-agenda-hide-tags-regexp "ongoingWork\\|review")
+(setopt org-agenda-hide-tags-regexp "ongoingWork\\|review")
 
-  ;; (setopt org-agenda-custom-commands '(("n" "Agenda and all TODOs" ((agenda "") (alltodo ""))))) ; the default
+;; (setopt org-agenda-custom-commands '(("n" "Agenda and all TODOs" ((agenda "") (alltodo ""))))) ; the default
 
-  (setopt org-agenda-custom-commands
-      '(("g" "Reviews"
-         ((agenda "review" ((org-agenda-overriding-header "Reviews")
-                               (org-agenda-entry-types '(:deadline))
-                               ))))))
-          
+(setopt org-agenda-custom-commands
+        '(("g" "Reviews"
+           ((agenda "review" ((org-agenda-overriding-header "Reviews")
+                              (org-agenda-entry-types '(:deadline))
+                              ))))))
+
 
 #+END_SRC
 
@@ -805,65 +804,65 @@ There seems to be a complication: =tags-todo= cannot display a deadline. I will 
 Setup projectile
 
 #+BEGIN_SRC elisp
-  (defun pi2-6-find-file-in-project-or-not()
-    (interactive)
-    (if (boundp 'meuporg-project-name)
-        (projectile-find-file)
-      (call-interactively 'find-file)))
+(defun pi2-6-find-file-in-project-or-not()
+  (interactive)
+  (if (boundp 'meuporg-project-name)
+      (projectile-find-file)
+    (call-interactively 'find-file)))
 #+END_SRC
 
 #+BEGIN_SRC elisp
-  (use-package projectile
-    :ensure t
+(use-package projectile
+  :ensure t
 
-    :custom
-    (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
-    (projectile-project-types nil)
-    (projectile-completion-system 'auto)
-    (projectile-require-project-root t)
-    
-    :config
-    (projectile-mode)
-    (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
-    (projectile-register-project-type
-     'meuporg-project '(".projectile")
-     :project-file ".projectile"
-     :compile "make")
-    (setq projectile-indexing-method 'native)
-    (setq projectile-enable-caching 'persistent)
-    )
+  :custom
+  (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
+  (projectile-project-types nil)
+  (projectile-completion-system 'auto)
+  (projectile-require-project-root t)
+  
+  :config
+  (projectile-mode)
+  (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
+  (projectile-register-project-type
+   'meuporg-project '(".projectile")
+   :project-file ".projectile"
+   :compile "make")
+  (setq projectile-indexing-method 'native)
+  (setq projectile-enable-caching 'persistent)
+  )
 
-  (use-package projectile-ripgrep
-    :ensure t
-    )
+(use-package projectile-ripgrep
+  :ensure t
+  )
 
-  (projectile-ignored-files-rel)
+(projectile-ignored-files-rel)
 
 #+END_SRC
 
 #+BEGIN_SRC elisp
-  (load-file "~/dotfiles/emacs/meuporg.el")
-  ;(print org-num-face)
-  ;(print cyanide-num-face)
+(load-file "~/dotfiles/emacs/meuporg.el")
+                                        ;(print org-num-face)
+                                        ;(print cyanide-num-face)
 #+END_SRC
 ** Org export
 The default style when exporting org to LATEX is very ugly; the following makes it better by removing ugly boxes and ensuring that the table of content does not interfere with the remainder of the content.
 #+BEGIN_SRC elisp
-  (setopt org-latex-with-hyperref "\\hypersetup{
-    pdfauthor={%a},
-    pdftitle={%t},
-    pdfkeywords={%k},
-    pdfsubject={%d},
-    pdfcreator={%c}, 
-    pdflang={%L},
-    colorlinks=true,
-    urlcolor=blue,
-    linkcolor=blue,
-    citecolor=red}")
+(setopt org-latex-with-hyperref "\\hypersetup{
+  pdfauthor={%a},
+  pdftitle={%t},
+  pdfkeywords={%k},
+  pdfsubject={%d},
+  pdfcreator={%c}, 
+  pdflang={%L},
+  colorlinks=true,
+  urlcolor=blue,
+  linkcolor=blue,
+  citecolor=red}")
 
-    (setopt org-latex-toc-command "\\tableofcontents \\newpage
+(setopt org-latex-toc-command "\\tableofcontents \\newpage
 
-  ")
+")
 #+END_SRC
 ** LSP
 Not very convincing, auctex should be all I need.
@@ -879,9 +878,9 @@ Not very convincing, auctex should be all I need.
 
 ** Magit
 #+BEGIN_SRC elisp
-  (use-package magit
-    :ensure t
-    )
+(use-package magit
+  :ensure t
+  )
 #+END_SRC
 
 * Input/Editing handling
@@ -900,7 +899,7 @@ From the [[https://github.com/oantolin/orderless][orderless documentation]].
   (completion-category-overrides '((file (styles partial-completion))))
   (completion-category-defaults nil) ;; Disable defaults, use our settings
   (completion-pcm-leading-wildcard t) ;; Emacs 31: partial-completion behaves like substring
-)
+  )
 #+END_SRC
 
 *** Corfu
@@ -1007,219 +1006,219 @@ Documentation: https://github.com/minad/corfu
   (add-hook 'completion-at-point-functions #'cape-elisp-block)
   (add-hook 'completion-at-point-functions #'cape-history)
   ;; ...
-)
+  )
 #+END_SRC
 *** Marginalia
 The purpose of this package is to provide additional information in the mini-buffer, for example the start of the documentation of a function, when said function is displayed in said minibuffer.
 
 The following use-package macro is straight from the [[https://github.com/minad/marginalia][official documentation]] (I just added =:ensure t=). 
 #+BEGIN_SRC elisp 
-  ;; Enable rich annotations using the Marginalia package
-  (use-package marginalia
-    :ensure t
-    ;; Bind `marginalia-cycle' locally in the minibuffer.  To make the binding
-    ;; available in the *Completions* buffer, add it to the
-    ;; `completion-list-mode-map'.
-    :bind (:map minibuffer-local-map
-           ("M-A" . marginalia-cycle))
+;; Enable rich annotations using the Marginalia package
+(use-package marginalia
+  :ensure t
+  ;; Bind `marginalia-cycle' locally in the minibuffer.  To make the binding
+  ;; available in the *Completions* buffer, add it to the
+  ;; `completion-list-mode-map'.
+  :bind (:map minibuffer-local-map
+              ("M-A" . marginalia-cycle))
 
-    ;; The :init section is always executed.
-    :init
-    ;; Marginalia must be activated in the :init section of use-package such that
-    ;; the mode gets enabled right away. Note that this forces loading the
-    ;; package.
-    (marginalia-mode))
+  ;; The :init section is always executed.
+  :init
+  ;; Marginalia must be activated in the :init section of use-package such that
+  ;; the mode gets enabled right away. Note that this forces loading the
+  ;; package.
+  (marginalia-mode))
 #+END_SRC
 *** Consult
 Copy/pasted from [[https://github.com/minad/consult?tab=readme-ov-file#use-package-example][the officiel doc]].
 
 
 #+BEGIN_SRC elisp
-  (global-unset-key (kbd "M-x"))
+(global-unset-key (kbd "M-x"))
 
-  (use-package consult
-      :ensure t
-      ;; Replace bindings. Lazily loaded by `use-package'.
-      :bind (;; C-c bindings in `mode-specific-map'
-             ("C-c M-x" . consult-mode-command)
-             ([remap Info-search] . consult-info)
-             ;; C-x bindings in `ctl-x-map'
-             ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-             ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-             ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
-             ;; Other custom bindings
-             ("M-S-v" . consult-yank-pop)                ;; orig. yank-pop
-             ;; M-g bindings in `goto-map'
-             ("M-x g" . consult-goto-line)             ;; orig. goto-line
-             ("M-x o" . consult-outline)               ;; Alternative: consult-org-heading
-             ("M-x m" . consult-mark)
-             ("M-x k" . consult-global-mark)
-             ("M-x i" . consult-imenu)
-             ("M-x I" . consult-imenu-multi)
-             ;; M-s bindings in `search-map'
-             ("M-x f" . consult-find)                  ;; Alternative: consult-fd
-             ("M-x l" . consult-locate)
-             ("M-x G" . consult-grep)
-             ;("M-x G" . consult-git-grep)
-             ("M-x r" . consult-ripgrep)
-             ("M-x l" . consult-line)
-             ("M-x L" . consult-line-multi)
-             ;; ("M-s k" . consult-keep-lines)
-             ;; ("M-s u" . consult-focus-lines)
-             ;; Isearch integration
-             ;("M-s e" . consult-isearch-history)
-      ;;        :map isearch-mode-map
-      ;;        ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-      ;;        ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-      ;;        ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-      ;;        ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
-      ;;        ;; Minibuffer history
-      ;;        :map minibuffer-local-map
-      ;;        ("M-s" . consult-history)                 ;; orig. next-matching-history-element
-      ;;        ("M-r" . consult-history)                ;; orig. previous-matching-history-element
-             )
+(use-package consult
+  :ensure t
+  ;; Replace bindings. Lazily loaded by `use-package'.
+  :bind (;; C-c bindings in `mode-specific-map'
+         ("C-c M-x" . consult-mode-command)
+         ([remap Info-search] . consult-info)
+         ;; C-x bindings in `ctl-x-map'
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+         ;; Other custom bindings
+         ("M-S-v" . consult-yank-pop)                ;; orig. yank-pop
+         ;; M-g bindings in `goto-map'
+         ("M-x g" . consult-goto-line)             ;; orig. goto-line
+         ("M-x o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-x m" . consult-mark)
+         ("M-x k" . consult-global-mark)
+         ("M-x i" . consult-imenu)
+         ("M-x I" . consult-imenu-multi)
+         ;; M-s bindings in `search-map'
+         ("M-x f" . consult-find)                  ;; Alternative: consult-fd
+         ("M-x l" . consult-locate)
+         ("M-x G" . consult-grep)
+                                        ;("M-x G" . consult-git-grep)
+         ("M-x r" . consult-ripgrep)
+         ("M-x l" . consult-line)
+         ("M-x L" . consult-line-multi)
+         ;; ("M-s k" . consult-keep-lines)
+         ;; ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+                                        ;("M-s e" . consult-isearch-history)
+         ;;        :map isearch-mode-map
+         ;;        ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ;;        ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ;;        ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ;;        ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+         ;;        ;; Minibuffer history
+         ;;        :map minibuffer-local-map
+         ;;        ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+         ;;        ("M-r" . consult-history)                ;; orig. previous-matching-history-element
+         )
 
-      ;; ;; The :init configuration is always executed (Not lazy)
-      :init
+  ;; ;; The :init configuration is always executed (Not lazy)
+  :init
 
-      ;; Tweak the register preview for `consult-register-load',
-      ;; `consult-register-store' and the built-in commands.  This improves the
-      ;; register formatting, adds thin separator lines, register sorting and hides
-      ;; the window mode line.
-      (advice-add #'register-preview :override #'consult-register-window)
-      (setopt register-preview-delay 0.5)
+  ;; Tweak the register preview for `consult-register-load',
+  ;; `consult-register-store' and the built-in commands.  This improves the
+  ;; register formatting, adds thin separator lines, register sorting and hides
+  ;; the window mode line.
+  (advice-add #'register-preview :override #'consult-register-window)
+  (setopt register-preview-delay 0.5)
 
-      ;; Use Consult to select xref locations with preview
-      (setopt xref-show-xrefs-function #'consult-xref
-              xref-show-definitions-function #'consult-xref)
+  ;; Use Consult to select xref locations with preview
+  (setopt xref-show-xrefs-function #'consult-xref
+          xref-show-definitions-function #'consult-xref)
 
-      ;; Configure other variables and modes in the :config section,
-      ;; after lazily loading the package.
-      :config
+  ;; Configure other variables and modes in the :config section,
+  ;; after lazily loading the package.
+  :config
 
-      ;; Optionally configure preview. The default value
-      ;; is 'any, such that any key triggers the preview.
-      ;; (setq consult-preview-key 'any)
-      ;; (setq consult-preview-key "M-.")
-      ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
-      ;; For some commands and buffer sources it is useful to configure the
-      ;; :preview-key on a per-command basis using the `consult-customize' macro.
-      (consult-customize
-       consult-theme :preview-key '(:debounce 0.2 any)
-       consult-ripgrep consult-git-grep consult-grep consult-man
-       consult-bookmark consult-recent-file consult-xref
-       consult-source-bookmark consult-source-file-register
-       consult-source-recent-file consult-source-project-recent-file
-       ;; :preview-key "M-."
-       :preview-key '(:debounce 0.4 any))
+  ;; Optionally configure preview. The default value
+  ;; is 'any, such that any key triggers the preview.
+  ;; (setq consult-preview-key 'any)
+  ;; (setq consult-preview-key "M-.")
+  ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+  ;; For some commands and buffer sources it is useful to configure the
+  ;; :preview-key on a per-command basis using the `consult-customize' macro.
+  (consult-customize
+   consult-theme :preview-key '(:debounce 0.2 any)
+   consult-ripgrep consult-git-grep consult-grep consult-man
+   consult-bookmark consult-recent-file consult-xref
+   consult-source-bookmark consult-source-file-register
+   consult-source-recent-file consult-source-project-recent-file
+   ;; :preview-key "M-."
+   :preview-key '(:debounce 0.4 any))
 
-      (setopt consult-narrow-key "<") ;; "C-+"
+  (setopt consult-narrow-key "<") ;; "C-+"
 
-      ;; Optionally make narrowing help available in the minibuffer.
-      ;; You may want to use `embark-prefix-help-command' or which-key instead.
-      ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
-      )
+  ;; Optionally make narrowing help available in the minibuffer.
+  ;; You may want to use `embark-prefix-help-command' or which-key instead.
+  ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
+  )
 #+END_SRC
 ** Yasnippet
 
 #+BEGIN_SRC emacs-lisp 
-  (use-package yasnippet
-    :ensure t
-    :hook
-    (text-mode . yas-minor-mode)
+(use-package yasnippet
+  :ensure t
+  :hook
+  (text-mode . yas-minor-mode)
 
-    :config
-    (yas-minor-mode-on)
-    (yas-reload-all)
-    )
+  :config
+  (yas-minor-mode-on)
+  (yas-reload-all)
+  )
 
 
-  ;; (use-package consult-yasnippet
-  ;;  :ensure t
-  ;;  )
+;; (use-package consult-yasnippet
+;;  :ensure t
+;;  )
 
 #+END_SRC
 *** Python Snippets
 **** Main function
 #+BEGIN_SRC text :tangle ~/.emacs.d/snippets/python-mode/main
-  # name: __main__
-  # --
-  if __name__ == "__main__":
-      $1
+# name: __main__
+# --
+if __name__ == "__main__":
+$1
 #+END_SRC
 **** Standard imports
 #+BEGIN_SRC text :tangle ~/.emacs.d/snippets/python-mode/imports
-  # name: imports
-  # --
-  from sage.all import *
-  from sboxU import *
+# name: imports
+# --
+from sage.all import *
+from sboxU import *
 #+END_SRC
 **** Function declaration
 #+BEGIN_SRC text :tangle ~/.emacs.d/snippets/python-mode/def
-  # name: def
-  # --
-  def ${1:function_name}(${2:params}) -> ${3:output_type}:
-      """!TODO! write docstring for $1
+# name: def
+# --
+def ${1:function_name}(${2:params}) -> ${3:output_type}:
+"""!TODO! write docstring for $1
 
-      Args:
-          $2
+Args:
+$2
 
-      Returns:
-          $3
-      """
-      $0
+Returns:
+$3
+"""
+$0
 #+END_SRC
 **** Class declaration
 #+BEGIN_SRC text :tangle ~/.emacs.d/snippets/python-mode/class
-  # name: class
-  # --
-  class ${1:className}:
-      """!TODO! write docstring for class $1
-      """
+# name: class
+# --
+class ${1:className}:
+"""!TODO! write docstring for class $1
+"""
 
-      def __init__(self, ${2:params}):
-          """!TODO! write docsting for init of class $1
+def __init__(self, ${2:params}):
+"""!TODO! write docsting for init of class $1
 
-          Args:
-              $2
-          """
-          $0
+Args:
+$2
+"""
+$0
 #+END_SRC
 *** org-mode snippets
 #+BEGIN_SRC text :tangle ~/.emacs.d/snippets/org-mode/elisp-src
-  # name: elisp-src
-  # --
-  ,#+BEGIN_SRC elisp :tangle no
-      $1
-  ,#+END_SRC
+# name: elisp-src
+# --
+,#+BEGIN_SRC elisp :tangle no
+$1
+,#+END_SRC
 #+END_SRC
 
 #+BEGIN_SRC text :tangle ~/.emacs.d/snippets/org-mode/sage-src
-  # name: sage-src
-  # --
-  ,#+BEGIN_SRC python :python sage
-      $1
-  ,#+END_SRC
+# name: sage-src
+# --
+,#+BEGIN_SRC python :python sage
+$1
+,#+END_SRC
 #+END_SRC
 *** C++ snippet
 #+BEGIN_SRC text :tangle ~/.emacs.d/snippets/c++-mode/docstring
-  # name: docstring-cc
-  # --
-  /** @brief $0
-   ,*
-   ,* @param
-   ,*
-   ,* @result
-   ,*/
+# name: docstring-cc
+# --
+/** @brief $0
+,*
+,* @param
+,*
+,* @result
+,*/
 #+END_SRC
 
 #+BEGIN_SRC text :tangle ~/.emacs.d/snippets/c++-mode/for-range
-  # name: for-range
-  # --
-  for (${1:type} ${2:variable}=0; $2<${3:upperBound}; $2++)
-  {
-      $0
-  }
+# name: for-range
+# --
+for (${1:type} ${2:variable}=0; $2<${3:upperBound}; $2++)
+{
+$0
+}
 #+END_SRC
 
 
@@ -1247,17 +1246,17 @@ Documentation: [[https://github.com/abo-abo/avy]]
 Relevant blog post: https://karthinks.com/software/avy-can-do-anything/
  
 #+BEGIN_SRC emacs-lisp
-  (use-package avy
-    :ensure t
+(use-package avy
+  :ensure t
 
-    )
+  )
 #+END_SRC
 
 ** Efficient search
 #+BEGIN_SRC elisp
-  (use-package ag
-    :ensure t
-    )
+(use-package ag
+  :ensure t
+  )
 #+END_SRC
 
 ** Custom moving/editing commands
@@ -1273,133 +1272,133 @@ First, a small helper functions: it unsets keyboard shortcut before assigning it
 Now, the main function sets all the common keybindings that I use (many of which are based on an old ergoemacs version that I used a lot).
 
 #+BEGIN_SRC emacs-lisp
-  (defun pi2-6-reset-keys()
-    "Sets all the keybindings at once."
-    (interactive)
+(defun pi2-6-reset-keys()
+  "Sets all the keybindings at once."
+  (interactive)
 
-    (cua-mode)
-    
-    ;(global-unset-key "C-p")
-    ;(local-unset-key  "C-p")
-  					; -- main functions
-    (pi2-6-global-set-key (kbd "M-SPC") 'set-mark-command)
-    (pi2-6-global-set-key (kbd "M-a") 'execute-extended-command)
-    (pi2-6-global-set-key (kbd "M-ù") 'execute-extended-command) ;; backup in case a mode redefines M-a
+  (cua-mode)
+  
+                                        ;(global-unset-key "C-p")
+                                        ;(local-unset-key  "C-p")
+					; -- main functions
+  (pi2-6-global-set-key (kbd "M-SPC") 'set-mark-command)
+  (pi2-6-global-set-key (kbd "M-a") 'execute-extended-command)
+  (pi2-6-global-set-key (kbd "M-ù") 'execute-extended-command) ;; backup in case a mode redefines M-a
 
-  					; -- movements within sentences
-    (pi2-6-global-set-key (kbd "M-l") 'forward-char)
-    (pi2-6-global-set-key (kbd "M-o") 'forward-word)
-    (pi2-6-global-set-key (kbd "M-j") 'backward-char)
-    (pi2-6-global-set-key (kbd "M-u") 'backward-word)
-    (pi2-6-global-set-key (kbd "M-h") 'move-beginning-of-line)
-    (pi2-6-global-set-key (kbd "M-m") 'move-end-of-line)
-    (pi2-6-global-set-key (kbd "M-i") 'previous-line)
-    (pi2-6-global-set-key (kbd "M-k") 'next-line)
+					; -- movements within sentences
+  (pi2-6-global-set-key (kbd "M-l") 'forward-char)
+  (pi2-6-global-set-key (kbd "M-o") 'forward-word)
+  (pi2-6-global-set-key (kbd "M-j") 'backward-char)
+  (pi2-6-global-set-key (kbd "M-u") 'backward-word)
+  (pi2-6-global-set-key (kbd "M-h") 'move-beginning-of-line)
+  (pi2-6-global-set-key (kbd "M-m") 'move-end-of-line)
+  (pi2-6-global-set-key (kbd "M-i") 'previous-line)
+  (pi2-6-global-set-key (kbd "M-k") 'next-line)
 
-  					; -- bigger movements
-    (pi2-6-global-set-key (kbd "M-p") 'recenter-top-bottom)
-    (pi2-6-global-set-key (kbd "C-f") 'pi2-6-occur-in-project-or-folder)
-    (pi2-6-global-set-key (kbd "M-;") 'isearch-forward)
-    (pi2-6-global-set-key (kbd "M-:") 'isearch-backward)
-    (pi2-6-global-set-key (kbd "M-\" g") 'goto-line)
-    (pi2-6-global-set-key (kbd "M-\" l") 'avy-goto-line)
-    (pi2-6-global-set-key (kbd "M-\" j") 'avy-goto-char-timer)
-    (pi2-6-global-set-key (kbd "M-\" s") 'pi2-6/save-anchor)
-    (pi2-6-global-set-key (kbd "M-\" b") 'pi2-6/back-to-anchor)
+					; -- bigger movements
+  (pi2-6-global-set-key (kbd "M-p") 'recenter-top-bottom)
+  (pi2-6-global-set-key (kbd "C-f") 'pi2-6-occur-in-project-or-folder)
+  (pi2-6-global-set-key (kbd "M-;") 'isearch-forward)
+  (pi2-6-global-set-key (kbd "M-:") 'isearch-backward)
+  (pi2-6-global-set-key (kbd "M-\" g") 'goto-line)
+  (pi2-6-global-set-key (kbd "M-\" l") 'avy-goto-line)
+  (pi2-6-global-set-key (kbd "M-\" j") 'avy-goto-char-timer)
+  (pi2-6-global-set-key (kbd "M-\" s") 'pi2-6/save-anchor)
+  (pi2-6-global-set-key (kbd "M-\" b") 'pi2-6/back-to-anchor)
 
-                                          ; -- outline
-    (pi2-6-global-set-key (kbd "M-é") 'outline-forward-same-level)
-    (pi2-6-global-set-key (kbd "M-&") 'outline-backward-same-level)
-    (pi2-6-global-set-key (kbd "C-<tab>") 'outline-cycle)
-    (pi2-6-global-set-key (kbd "C-M-<tab>") 'outline-cycle-buffer)
-    
+                                        ; -- outline
+  (pi2-6-global-set-key (kbd "M-é") 'outline-forward-same-level)
+  (pi2-6-global-set-key (kbd "M-&") 'outline-backward-same-level)
+  (pi2-6-global-set-key (kbd "C-<tab>") 'outline-cycle)
+  (pi2-6-global-set-key (kbd "C-M-<tab>") 'outline-cycle-buffer)
+  
 
-  					; -- advanced interaction with region
-  					;(pi2-6-global-set-key (kbd "M-\" m") 'pi2-6-improved-selector)
+					; -- advanced interaction with region
+					;(pi2-6-global-set-key (kbd "M-\" m") 'pi2-6-improved-selector)
 
-  					; -- deleting
-    (pi2-6-global-set-key (kbd "M-f") 'delete-char)
-    (pi2-6-global-set-key (kbd "M-r") 'kill-word)
-    (pi2-6-global-set-key (kbd "M-d") 'delete-backward-char)
-    (pi2-6-global-set-key (kbd "M-e") 'backward-kill-word)
-    (pi2-6-global-set-key (kbd "M-g") 'kill-line)
+					; -- deleting
+  (pi2-6-global-set-key (kbd "M-f") 'delete-char)
+  (pi2-6-global-set-key (kbd "M-r") 'kill-word)
+  (pi2-6-global-set-key (kbd "M-d") 'delete-backward-char)
+  (pi2-6-global-set-key (kbd "M-e") 'backward-kill-word)
+  (pi2-6-global-set-key (kbd "M-g") 'kill-line)
 
-  					; -- undo/redo
-    (pi2-6-global-set-key (kbd "M-z") 'undo)
-    (pi2-6-global-set-key (kbd "M-y") 'undo-redo)
-    (pi2-6-global-set-key (kbd "M--") 'repeat)
+					; -- undo/redo
+  (pi2-6-global-set-key (kbd "M-z") 'undo)
+  (pi2-6-global-set-key (kbd "M-y") 'undo-redo)
+  (pi2-6-global-set-key (kbd "M--") 'repeat)
 
-  					; -- kill ring
-    ;; (pi2-6-global-set-key (kbd "M-c") 'kill-ring-save)
-    ;; (pi2-6-global-set-key (kbd "M-v") 'yank)
-    
-  					; -- more sophisticated text interaction
-    (pi2-6-global-set-key (kbd "M-q") 'fill-paragraph)
-    (pi2-6-global-set-key (kbd "C--") 'yas-insert-snippet)
-    (pi2-6-global-set-key (kbd "M-'") 'comment-dwim)
+					; -- kill ring
+  ;; (pi2-6-global-set-key (kbd "M-c") 'kill-ring-save)
+  ;; (pi2-6-global-set-key (kbd "M-v") 'yank)
+  
+					; -- more sophisticated text interaction
+  (pi2-6-global-set-key (kbd "M-q") 'fill-paragraph)
+  (pi2-6-global-set-key (kbd "C--") 'yas-insert-snippet)
+  (pi2-6-global-set-key (kbd "M-'") 'comment-dwim)
 
-  					; -- insertions
-    (pi2-6-global-set-key (kbd "M-\" i") 'pi2-6-insert-time-stamp)
-    (pi2-6-global-set-key (kbd "M-\" t") 'pi2-6-insert-current-time)
+					; -- insertions
+  (pi2-6-global-set-key (kbd "M-\" i") 'pi2-6-insert-time-stamp)
+  (pi2-6-global-set-key (kbd "M-\" t") 'pi2-6-insert-current-time)
 
-  					; -- rectangle manipulations
-    (pi2-6-global-set-key (kbd "C-x r x") 'kill-rectangle)
-    (pi2-6-global-set-key (kbd "C-x r c") 'copy-rectangle-as-kill)
-    (pi2-6-global-set-key (kbd "C-x r v") 'yank-rectangle)
-    (pi2-6-global-set-key (kbd "C-x r n") 'rectangle-number-lines)
-    (pi2-6-global-set-key (kbd "C-x r i") 'string-rectangle)
+					; -- rectangle manipulations
+  (pi2-6-global-set-key (kbd "C-x r x") 'kill-rectangle)
+  (pi2-6-global-set-key (kbd "C-x r c") 'copy-rectangle-as-kill)
+  (pi2-6-global-set-key (kbd "C-x r v") 'yank-rectangle)
+  (pi2-6-global-set-key (kbd "C-x r n") 'rectangle-number-lines)
+  (pi2-6-global-set-key (kbd "C-x r i") 'string-rectangle)
 
-  					; -- ispell/flyspell
-    (pi2-6-global-set-key (kbd "M-\" l") 'pi2-6-flyspell-mode)
-
-
-  					; -- interacting with buffers
-    (pi2-6-global-set-key (kbd "C-<prior>") 'previous-buffer)
-    (pi2-6-global-set-key (kbd "C-<next>")  'next-buffer)
-    (pi2-6-global-set-key (kbd "C-r")       'revert-buffer)
-    (pi2-6-global-set-key (kbd "C-S-b")     'ibuffer)
-    (pi2-6-global-set-key (kbd "C-b")       'consult-buffer)
+					; -- ispell/flyspell
+  (pi2-6-global-set-key (kbd "M-\" l") 'pi2-6-flyspell-mode)
 
 
-  					; -- interacting with files
-    (pi2-6-global-set-key (kbd "C-o") 'pi2-6-find-file-in-project-or-not)
-    (pi2-6-global-set-key (kbd "C-S-o") 'find-file)
-    (pi2-6-global-set-key (kbd "C-c C-o") 'pi2-6/open-at-point)
-    (pi2-6-global-set-key (kbd "M-\" c") 'pi2-6-copy-link-to-current-file)
-    (pi2-6-global-set-key (kbd "M-\" o") 'pi2-6-open-terminal-in-directory)
-    (pi2-6-global-set-key (kbd "M-\" f") 'pi2-6-open-file-browser-in-directory)
-    (pi2-6-global-set-key (kbd "M-à") 'pi2-6-open-dired)
-
-  					; -- interacting with windows
-    (pi2-6-global-set-key (kbd "M-Q") 'delete-window)
-    (pi2-6-global-set-key (kbd "M-s") 'other-window)
-    (pi2-6-global-set-key (kbd "M-S") 'delete-other-windows)
-    (pi2-6-global-set-key (kbd "C-b") 'consult-buffer)
+					; -- interacting with buffers
+  (pi2-6-global-set-key (kbd "C-<prior>") 'previous-buffer)
+  (pi2-6-global-set-key (kbd "C-<next>")  'next-buffer)
+  (pi2-6-global-set-key (kbd "C-r")       'revert-buffer)
+  (pi2-6-global-set-key (kbd "C-S-b")     'ibuffer)
+  (pi2-6-global-set-key (kbd "C-b")       'consult-buffer)
 
 
-  					; -- interacting with frames
-    (pi2-6-global-set-key (kbd "C-S-n") 'make-frame-command)
-    (pi2-6-global-set-key (kbd "C-w")   'kill-buffer)
-    (pi2-6-global-set-key (kbd "C-s")   'save-buffer)
+					; -- interacting with files
+  (pi2-6-global-set-key (kbd "C-o") 'pi2-6-find-file-in-project-or-not)
+  (pi2-6-global-set-key (kbd "C-S-o") 'find-file)
+  (pi2-6-global-set-key (kbd "C-c C-o") 'pi2-6/open-at-point)
+  (pi2-6-global-set-key (kbd "M-\" c") 'pi2-6-copy-link-to-current-file)
+  (pi2-6-global-set-key (kbd "M-\" o") 'pi2-6-open-terminal-in-directory)
+  (pi2-6-global-set-key (kbd "M-\" f") 'pi2-6-open-file-browser-in-directory)
+  (pi2-6-global-set-key (kbd "M-à") 'pi2-6-open-dired)
 
-  					; -- meuporg
-    (pi2-6-global-set-key (kbd "C-! d") 'xref-find-definitions-other-window)
-    (pi2-6-global-set-key (kbd "C-! h") 'lsp-describe-thing-at-point)
-    (pi2-6-global-set-key (kbd "C-! b") 'xref-go-back)
-    (pi2-6-global-set-key (kbd "C-! j") 'consult-outline)
-    (pi2-6-global-set-key (kbd "C-! o") 'pi2-6/open-at-point)
-    (pi2-6-global-set-key (kbd "C-! c") 'pi2-6/vulpea-action)
-    (pi2-6-global-set-key (kbd "C-! f") 'vulpea-find)
-    (pi2-6-global-set-key (kbd "C-! n") 'org-roam-node-insert)
-    (pi2-6-global-set-key (kbd "C-! a") 'org-agenda)
-    (pi2-6-global-set-key (kbd "C-! !") 'pi2-6/dashboard)
-    )
+					; -- interacting with windows
+  (pi2-6-global-set-key (kbd "M-Q") 'delete-window)
+  (pi2-6-global-set-key (kbd "M-s") 'other-window)
+  (pi2-6-global-set-key (kbd "M-S") 'delete-other-windows)
+  (pi2-6-global-set-key (kbd "C-b") 'consult-buffer)
 
 
+					; -- interacting with frames
+  (pi2-6-global-set-key (kbd "C-S-n") 'make-frame-command)
+  (pi2-6-global-set-key (kbd "C-w")   'kill-buffer)
+  (pi2-6-global-set-key (kbd "C-s")   'save-buffer)
 
-  (add-hook 'after-init-hook 'pi2-6-reset-keys)
-  (add-hook 'org-mode-hook 'pi2-6-reset-keys)
-  (add-hook 'c-mode-common-hook 'pi2-6-reset-keys)
+					; -- meuporg
+  (pi2-6-global-set-key (kbd "C-! d") 'xref-find-definitions-other-window)
+  (pi2-6-global-set-key (kbd "C-! h") 'lsp-describe-thing-at-point)
+  (pi2-6-global-set-key (kbd "C-! b") 'xref-go-back)
+  (pi2-6-global-set-key (kbd "C-! j") 'consult-outline)
+  (pi2-6-global-set-key (kbd "C-! o") 'pi2-6/open-at-point)
+  (pi2-6-global-set-key (kbd "C-! c") 'pi2-6/vulpea-action)
+  (pi2-6-global-set-key (kbd "C-! f") 'vulpea-find)
+  (pi2-6-global-set-key (kbd "C-! n") 'org-roam-node-insert)
+  (pi2-6-global-set-key (kbd "C-! a") 'org-agenda)
+  (pi2-6-global-set-key (kbd "C-! !") 'pi2-6/dashboard)
+  )
+
+
+
+(add-hook 'after-init-hook 'pi2-6-reset-keys)
+(add-hook 'org-mode-hook 'pi2-6-reset-keys)
+(add-hook 'c-mode-common-hook 'pi2-6-reset-keys)
 #+END_SRC
 
 * Programming
@@ -1423,28 +1422,28 @@ For python, we only need to set the value of the default indent.
 ** TODO LSP
 
 #+BEGIN_SRC elisp
-  (use-package lsp-mode
-    :ensure t
-    ;:config
-    ;(define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-workspace-symbol)
+(use-package lsp-mode
+  :ensure t
+                                        ;:config
+                                        ;(define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-workspace-symbol)
 
-    :hook
-    (python-mode . lsp)
-    (c++-mode . lsp)
-    (c-mode . lsp)
-    )
+  :hook
+  (python-mode . lsp)
+  (c++-mode . lsp)
+  (c-mode . lsp)
+  )
 
 
-  (use-package lsp-ui
-    :ensure t
-    :config
-    (setq
-     lsp-ui-peek-enable t
-     )
+(use-package lsp-ui
+  :ensure t
+  :config
+  (setq
+   lsp-ui-peek-enable t
+   )
 
-    :hook
-    (lsp-mode . lsp-ui-mode)
-    )
+  :hook
+  (lsp-mode . lsp-ui-mode)
+  )
 #+END_SRC
 
 
@@ -1470,19 +1469,19 @@ None of the python language servers I tried handle =cython=. Neither microsoft's
 *** dot
 Dot is a language to make graphs (as in, nodes and edges). The following use-package call comes from its [[https://github.com/ppareit/graphviz-dot-mode][documentation]].
 #+BEGIN_SRC elisp
-  (use-package graphviz-dot-mode
-    :ensure t
-    :config
-    (setq graphviz-dot-indent-width 4)
-    :hook
-    (graphviz-dot-mode . flycheck-mode))
+(use-package graphviz-dot-mode
+  :ensure t
+  :config
+  (setq graphviz-dot-indent-width 4)
+  :hook
+  (graphviz-dot-mode . flycheck-mode))
 #+END_SRC
 
 *** Cmake
 #+BEGIN_SRC elisp
-  (use-package cmake-mode
-    :ensure t
-    )
+(use-package cmake-mode
+  :ensure t
+  )
 #+END_SRC
 * LaTeX
 ** Auctex
@@ -1491,151 +1490,149 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
 - reftex-mode :: a sophisticated minor mode which handles references, both in-file ones (\ref) and external citations (\cite). Also provides the command =reftex-toc= (bound to =C-c == by default) which enables a quick navigation within a document structure independently from the way it is split into distinct LaTeX files.
 
 #+BEGIN_SRC elisp
-  (use-package tex
-    :ensure auctex
-    
-    :hook
-    ((LaTeX-mode . TeX-source-correlate-mode)
-     (LaTeX-mode . reftex-mode)))
+(use-package tex
+  :ensure auctex
+  
+  :hook
+  ((LaTeX-mode . TeX-source-correlate-mode)
+   (LaTeX-mode . reftex-mode)))
 #+END_SRC
 ** Spelling
 In order for ispell to work correctly (and thus flyspell), it is necessary that the files in [[~/new-emacs/aspell/]] are pointed to by symbolic links in the home folder that have the same name (except for a '.' at the start to hide them).
 
 #+BEGIN_SRC elisp :tangle yes :results output silent
 (defun pi2-6-start-flyspell-mode(dict)
-  (ispell-change-dictionary dict)
-  (flyspell-mode 1)
-  (flyspell-buffer)
-  (message (format "launched flyspell; language: %s"
-		   ispell-local-dictionary)))
+(ispell-change-dictionary dict)
+(flyspell-mode 1)
+(flyspell-buffer)
+(message (format "launched flyspell; language: %s"
+ispell-local-dictionary)))
 
 (defun pi2-6-flyspell-mode(b)
-  "Prompts the user for a letter and generates a file of the corresponding type"
-  (interactive "c[e] English   [f] French")
-  (cond ((eq b ?e) (pi2-6-start-flyspell-mode "english"))
-	((eq b ?f) (pi2-6-start-flyspell-mode "french"))
-	(t (message "unrecognized language"))))
+"Prompts the user for a letter and generates a file of the corresponding type"
+(interactive "c[e] English   [f] French")
+(cond ((eq b ?e) (pi2-6-start-flyspell-mode "english"))
+((eq b ?f) (pi2-6-start-flyspell-mode "french"))
+(t (message "unrecognized language"))))
 
 * Dashboard
 
 #+BEGIN_SRC elisp
-  (require 'widget)
-  (require 'org)
+(require 'widget)
+(require 'org)
 #+END_SRC
 
 ** General Helper Functions
 #+BEGIN_SRC elisp
-  (defun pi2-6/pretty-tags(tags)
-    (let ((double-dots (propertize ":" 'face 'org-tag)))
-      (s-concat
-       (mapconcat
-        (lambda(tag)
-          (format "%s%s" double-dots (propertize tag 'face (list (org-get-tag-face tag) 'org-tag))))
-        tags)
-       (if tags double-dots ""))))
+(defun pi2-6/pretty-tags(tags)
+  (let ((double-dots (propertize ":" 'face 'org-tag)))
+    (s-concat
+     (mapconcat
+      (lambda(tag)
+        (format "%s%s" double-dots (propertize tag 'face (list (org-get-tag-face tag) 'org-tag))))
+      tags)
+     (if tags double-dots ""))))
 
 #+END_SRC
 
 #+BEGIN_SRC elisp
-  (defun pi2-6/create-file-link(title path tags)
-    "Create a widget link to a given file with pretty tags."
-    (insert "  ")
-    (widget-create 'link
-                   :tag (s-concat (propertize "[→]" 'face 'org-link) " " title)
-                   :button-prefix ""
-                   :button-suffix ""
-                   :button-face '(:weight 'normal)
-                   :action `(lambda (widget &optional event)
-                              (kill-buffer "*Dashboard*")
-                              (find-file ,path)))
-    (insert "  " (pi2-6/pretty-tags tags) "\n"))
+(defun pi2-6/create-file-link(title path tags)
+  "Create a widget link to a given file with pretty tags."
+  (insert "  ")
+  (widget-create 'link
+                 :tag (s-concat (propertize "[→]" 'face 'org-link) " " title)
+                 :button-prefix ""
+                 :button-suffix ""
+                 :button-face '(:weight 'normal)
+                 :action `(lambda (widget &optional event)
+                            (kill-buffer "*Dashboard*")
+                            (find-file ,path)))
+  (insert "  " (pi2-6/pretty-tags tags) "\n"))
 
 
-  (defun pi2-6/dashboard-header (title depth)
-    "Insert a fontified header."
-    (pcase depth
-      (1 (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-1) "\n\n"))
-      (2 (insert (propertize (format "* %s" title ) 'face 'org-level-2) "\n"))
-      (_ (insert title))))
+(defun pi2-6/dashboard-header (title depth)
+  "Insert a fontified header."
+  (pcase depth
+    (1 (insert "\n\n" (propertize (format "* %s" title ) 'face 'org-level-1) "\n\n"))
+    (2 (insert (propertize (format "* %s" title ) 'face 'org-level-2) "\n"))
+    (_ (insert title))))
 
 #+END_SRC
 
 ** Generating Specific Content
 *** Ongoing projects
 #+BEGIN_SRC elisp
-  (defun pi2-6/create-project-link-widget(proj)
-    (let ((proj-tags (remove "ongoingWork" (vulpea-note-tags proj)))
-          (proj-title (vulpea-note-title proj))
-          (proj-path (vulpea-note-path proj)))
-      (pi2-6/create-file-link proj-title proj-path proj-tags)))      
+(defun pi2-6/create-project-link-widget(proj)
+  (let ((proj-tags (remove "ongoingWork" (vulpea-note-tags proj)))
+        (proj-title (vulpea-note-title proj))
+        (proj-path (vulpea-note-path proj)))
+    (pi2-6/create-file-link proj-title proj-path proj-tags)))
 
-
-  (defun pi2-6/dashboard-ongoing ()
-    "Creates a list of widget links by pulling all the notes tagged
-     ongoingWork."
-    (pi2-6/dashboard-header "Ongoing Work" 1)
-    (mapcar 'pi2-6/create-project-link-widget
-            (vulpea-db-query-by-tags-every '("ongoingWork"))))
-
+(defun pi2-6/dashboard-ongoing ()
+  "Creates a list of widget links by pulling all the notes tagged
+   ongoingWork."
+  (pi2-6/dashboard-header "Ongoing Work" 1)
+  (mapcar 'pi2-6/create-project-link-widget
+          (vulpea-db-query-by-tags-every '("ongoingWork"))))
 #+End_SRC
 
 *** Dotfiles
 #+BEGIN_SRC elisp
-  (defun pi2-6/dashboard-dotfiles()
-    "Inserts a section linking to the dotfiles."
-    (pi2-6/dashboard-header "Maintenance" 1)
-    (pi2-6/dashboard-header ".files" 2)
-    (pi2-6/create-file-link "emacs config" "~/dotfiles/emacs/config.org" nil)
-    (pi2-6/create-file-link "SWAY config" "~/dotfiles/sway.org" nil)
-    (pi2-6/create-file-link "Scripts" "~/dotfiles/scripts.org" nil)
-    (pi2-6/dashboard-header "Workshop" 2)
-    (pi2-6/create-file-link "Color theme (cyanide-theme)" "~/workshop/cyanide-theme/readme.org" nil)
-    (pi2-6/create-file-link "Meuporg" "~/workshop/meuporg/readme.org" nil))
+(defun pi2-6/dashboard-dotfiles()
+  "Inserts a section linking to the dotfiles."
+  (pi2-6/dashboard-header "Maintenance" 1)
+  (pi2-6/dashboard-header ".files" 2)
+  (pi2-6/create-file-link "emacs config" "~/dotfiles/emacs/config.org" nil)
+  (pi2-6/create-file-link "SWAY config" "~/dotfiles/sway.org" nil)
+  (pi2-6/create-file-link "Scripts" "~/dotfiles/scripts.org" nil)
+  (pi2-6/dashboard-header "Workshop" 2)
+  (pi2-6/create-file-link "Color theme (cyanide-theme)" "~/workshop/cyanide-theme/readme.org" nil)
+  (pi2-6/create-file-link "Meuporg" "~/workshop/meuporg/readme.org" nil))
 #+END_SRC
 
 *** Deadlines
 #+BEGIN_SRC elisp
-  (defun pi2-6/dashboard-parse-project-with-deadline(proj)
-    "Returns a list consisting of the number of days left and a formatted
-  string describing the amount of days left."
-    (let* ((timestamp-string (vulpea-meta-get proj "DEADLINE"))
-           (days-left (org-timestamp-to-now timestamp-string)))
-      (list
-       :index days-left
-       :prefix
-       (s-concat
-        (propertize
-         (s-concat timestamp-string (format " (in %3d days) " days-left))
-         'face (cond ((< days-left 0) 'org-warning)
-                     ((< days-left 3) 'org-todo)
-                     ((< days-left 8) 'org-upcoming-deadline)
-                     ((< days-left 20) 'org-upcoming-distant-deadline)
-                     (t '(:foreground "tan"))))
-        (propertize "|" 'face 'bold))
-       :proj proj)))
+(defun pi2-6/dashboard-parse-project-with-deadline(proj)
+  "Returns a list consisting of the number of days left and a formatted
+string describing the amount of days left."
+  (let* ((timestamp-string (vulpea-meta-get proj "DEADLINE"))
+         (days-left (org-timestamp-to-now timestamp-string)))
+    (list
+     :index days-left
+     :prefix
+     (s-concat
+      (propertize
+       (s-concat timestamp-string (format " (in %3d days) " days-left))
+       'face (cond ((< days-left 0) 'org-warning)
+                   ((< days-left 3) 'org-todo)
+                   ((< days-left 8) 'org-upcoming-deadline)
+                   ((< days-left 20) 'org-upcoming-distant-deadline)
+                   (t '(:foreground "tan"))))
+      (propertize "|" 'face 'bold))
+     :proj proj)))
 
 
-  (defun pi2-6/dashboard-deadlines ()
-    "Inserts widgets to access notes corresponding to ongoingWork that also
-  have a deadline."
-    (pi2-6/dashboard-header "Deadlines" 1)
-    (let ((annotated-proj (mapcar 'pi2-6/dashboard-parse-project-with-deadline
-                                  (seq-filter (lambda (x) (and
-                                                           (vulpea-meta-get x "DEADLINE")
-                                                           (length> (vulpea-meta-get x "DEADLINE") 4)))
-                                              (vulpea-db-query-by-tags-every '("ongoingWork"))))))
-      (sort
-       annotated-proj
-       (lambda (a b) (< (plist-get a :index) (plist-get b :index))))
-      (dolist 
-          (x annotated-proj)
-        (let* ((prefix (plist-get x :prefix))
-               (proj (plist-get x :proj))
-               (proj-tags (remove "ongoingWork" (vulpea-note-tags proj)))
-               (proj-title (vulpea-note-title proj))
-               (proj-path (vulpea-note-path proj)))
-          (insert prefix)
-          (pi2-6/create-file-link proj-title proj-path proj-tags)))))
+(defun pi2-6/dashboard-deadlines ()
+  "Inserts widgets to access notes corresponding to ongoingWork that also
+have a deadline."
+  (pi2-6/dashboard-header "Deadlines" 1)
+  (let ((annotated-proj (mapcar 'pi2-6/dashboard-parse-project-with-deadline
+                                (seq-filter (lambda (x) (and
+                                                         (vulpea-meta-get x "DEADLINE")
+                                                         (length> (vulpea-meta-get x "DEADLINE") 4)))
+                                            (vulpea-db-query-by-tags-every '("ongoingWork"))))))
+    (sort
+     annotated-proj
+     (lambda (a b) (< (plist-get a :index) (plist-get b :index))))
+    (dolist 
+        (x annotated-proj)
+      (let* ((prefix (plist-get x :prefix))
+             (proj (plist-get x :proj))
+             (proj-tags (remove "ongoingWork" (vulpea-note-tags proj)))
+             (proj-title (vulpea-note-title proj))
+             (proj-path (vulpea-note-path proj)))
+        (insert prefix)
+        (pi2-6/create-file-link proj-title proj-path proj-tags)))))
 #+END_SRC
 
 #+RESULTS:
@@ -1643,40 +1640,40 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
 
 *** Widgets
 #+BEGIN_SRC elisp
-    (defun pi2-6/dashboard-papers-by-tags ()
-      "Creates a list of widget links by pullin all the notes tagged"
-      (widget-create 'editable-field
-                     :size 30
-                     :format "Find papers with tags: %v "
-                     :value ""
-                     :notify (lambda (widget &rest ignore)
-                               (setq pi2-6/dashboard-paper-query-tag (widget-value widget))))
-      (widget-create 'push-button 
-                     :notify (lambda (&rest ignore)
-                               (vulpea-visit
-                                (vulpea-select-from
-                                 (format "Papers with tag %s" pi2-6/dashboard-paper-query-tag)
-                                 (vulpea-db-query-by-tags-every
-                                  (cons "paper"
-                                          (split-string pi2-6/dashboard-paper-query-tag ":"))))))
-                     "find")
-      (insert "\n"))
+(defun pi2-6/dashboard-papers-by-tags ()
+  "Creates a list of widget links by pullin all the notes tagged"
+  (widget-create 'editable-field
+                 :size 30
+                 :format "Find papers with tags: %v "
+                 :value ""
+                 :notify (lambda (widget &rest ignore)
+                           (setq pi2-6/dashboard-paper-query-tag (widget-value widget))))
+  (widget-create 'push-button 
+                 :notify (lambda (&rest ignore)
+                           (vulpea-visit
+                            (vulpea-select-from
+                             (format "Papers with tag %s" pi2-6/dashboard-paper-query-tag)
+                             (vulpea-db-query-by-tags-every
+                              (cons "paper"
+                                    (split-string pi2-6/dashboard-paper-query-tag ":"))))))
+                 "find")
+  (insert "\n"))
 
 #+END_SRC
 
 ** Local keymap
 
 #+BEGIN_SRC elisp
-  (defvar pi2-6/dashboard-map
-    (let ((map (make-sparse-keymap)))
-      (define-key map (kbd "q") '(lambda () (interactive) (kill-buffer "*Dashboard*")))
-      (define-key map (kbd "o") 'find-file)
-      (define-key map (kbd "f") 'vulpea-find)
-      (define-key map (kbd "j") '(lambda () (interactive) (avy-goto-char ?→)))
-      map)
-    "Keymap for the dashboard.")
+(defvar pi2-6/dashboard-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") '(lambda () (interactive) (kill-buffer "*Dashboard*")))
+    (define-key map (kbd "o") 'find-file)
+    (define-key map (kbd "f") 'vulpea-find)
+    (define-key map (kbd "j") '(lambda () (interactive) (avy-goto-char ?→)))
+    map)
+  "Keymap for the dashboard.")
 
-  (set-keymap-parent pi2-6/dashboard-map widget-keymap)
+(set-keymap-parent pi2-6/dashboard-map widget-keymap)
 
 #+END_SRC
 
@@ -1685,43 +1682,43 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
 
 ** Main Function
 #+BEGIN_SRC elisp
-  (defun pi2-6/dashboard ()
-    "Create a landing page dashboard."
-    (interactive)
-    (let ((buf (get-buffer-create "*Dashboard*")))
-      (with-current-buffer buf
-        (let ((inhibit-read-only t))
-          (erase-buffer)
-          (insert (propertize "-*-  Dashboard  -*-" 'face 'org-document-title))
-          (insert "\n\n")
-          (insert (s-concat (propertize "[o]" 'face 'bold)
-                            "pen file  ⋅  "
-                            (propertize "[j]" 'face 'bold)
-                            "ump to link  ⋅  "
-                            (propertize "[f]" 'face 'bold)
-                            "ind in vulpea  ⋅  "
-                            (propertize "[q]" 'face 'bold)
-                            "uit \n"))
-          
-          (pi2-6/dashboard-deadlines)
+(defun pi2-6/dashboard ()
+  "Create a landing page dashboard."
+  (interactive)
+  (let ((buf (get-buffer-create "*Dashboard*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (propertize "-*-  Dashboard  -*-" 'face 'org-document-title))
+        (insert "\n\n")
+        (insert (s-concat (propertize "[o]" 'face 'bold)
+                          "pen file  ⋅  "
+                          (propertize "[j]" 'face 'bold)
+                          "ump to link  ⋅  "
+                          (propertize "[f]" 'face 'bold)
+                          "ind in vulpea  ⋅  "
+                          (propertize "[q]" 'face 'bold)
+                          "uit \n"))
+        
+        (pi2-6/dashboard-deadlines)
 
-          (pi2-6/dashboard-ongoing)
+        (pi2-6/dashboard-ongoing)
 
-          (pi2-6/dashboard-dotfiles)
+        (pi2-6/dashboard-dotfiles)
 
-          (pi2-6/dashboard-header "Vulpea/Roam" 1)
-          
-          (pi2-6/dashboard-papers-by-tags)
-          
-          (insert "\n\n")
-          
+        (pi2-6/dashboard-header "Vulpea/Roam" 1)
+        
+        (pi2-6/dashboard-papers-by-tags)
+        
+        (insert "\n\n")
+        
 
-          (use-local-map pi2-6/dashboard-map)
-          (widget-setup)
-          (switch-to-buffer buf)
-          (goto-char (point-min))
-          (forward-line 1))))
-      (get-buffer "*Dashboard*"))
+        (use-local-map pi2-6/dashboard-map)
+        (widget-setup)
+        (switch-to-buffer buf)
+        (goto-char (point-min))
+        (forward-line 1))))
+  (get-buffer "*Dashboard*"))
 #+END_SRC
 
 #+RESULTS:

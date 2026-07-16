@@ -18,13 +18,17 @@
     '((t . (:weight bold :foreground "white" :background "gray")))
     "A face for the name of buffers of the shape '*name*' in the mode line.")
 
+(defface cyanide-prog-face
+'((t (:background "#faf4dd" :foreground "#52432a")))
+"Background/foreground used in programming-mode buffers.")
+
 (deftheme cyanide-light
   "cyanide light theme")
 
 (custom-theme-set-faces ; this parenthesis is closed in the post-amble
  'cyanide-light
 
-'(default ((t (:foreground "#707070" :background "#f3f3f3" :distant-foreground "light gray"))))
+'(default ((t (:foreground "#707070" :background "#f1f1f8" :distant-foreground "light gray"))))
 '(border ((t (:foreground "black"))))
 '(bold ((t (:weight bold))))
 '(italic ((t (:italic t))))
@@ -32,14 +36,14 @@
 '(bold-italic ((t (:italic t :weight bold))))
 '(underline ((t (:underline t))))
 
-'(hl-line ((t (:background "white" :foreground "#333333"))))
+'(hl-line ((t (:background "white" ))))
 '(mouse ((t (:foreground "#333333"))))
 '(cursor ((t (:background "#d9a032"))))
 '(region ((t (:background "AntiqueWhite2"))))
 '(highlight ((t (:background "LightSteelBlue1"))))
 
 '(list-matching-lines-face ((t (:weight bold))))
-'(view-highlight-face ((t (:background "#f3f3f3"))))
+'(view-highlight-face ((t (:background "#f1f1f8"))))
 '(gui-button-face ((t (:foreground "light grey"))))
 '(secondary-selection ((t (:background "paleturquoise"))))
 '(custom-button-face ((t (:background "cyan" :foreground "dark cyan"))))
@@ -47,23 +51,23 @@
 
 '(mode-line ((t (:background "#bdad99" :foreground "black"))))
 
-'(font-lock-comment-face ((t (:background "LavenderBlush1" :foreground "dim gray" :weight semi-light))))
- '(font-lock-constant-face ((t (:background "#f3f3f3" :foreground "DarkOrange3"))))
- '(font-lock-builtin-face ((t (:background "#f3f3f3" :foreground "OliveDrab4" :weight semi-bold))))
- '(font-lock-keyword-face ((t (:background "#f3f3f3" :foreground "blue" :weight semi-bold))))
- '(font-lock-string-face ((t (:background "#f3fff0" :foreground "slate gray"))))
- '(font-lock-variable-name-face ((t (:background "#f3f3f3" :foreground "brown"))))
+'(font-lock-comment-face ((t (:background "#f1f1f8" :foreground "#709b7c" :weight light :slant italic))))
+ '(font-lock-constant-face ((t (:background "#faf4dd" :foreground "DarkOrange3"))))
+ '(font-lock-builtin-face ((t (:background "#faf4dd" :foreground "OliveDrab4" :weight semi-bold))))
+ '(font-lock-keyword-face ((t (:background "#faf4dd" :foreground "blue" :weight semi-bold))))
+ '(font-lock-string-face ((t (:background "#f1f1f8" :foreground "std-color"))))
+ '(font-lock-variable-name-face ((t (:background "#faf4dd" :foreground "brown"))))
  '(font-lock-function-name-face ((t (:background "white" :foreground "saddle brown" :weight semi-bold :height 1.2))))
- '(font-lock-type-face ((t (:background "#f3f3f3" :foreground "Purple3"))))
- '(font-lock-warning-face ((t (:weight bold :background "white" :foreground "red"))))
+ '(font-lock-type-face ((t (:background "#faf4dd" :foreground "Purple3"))))
+ '(font-lock-warning-face ((t (:weight bold :background "#faf4dd" :foreground "red"))))
 
 '(cyanide-class-name-face ((t (:background "white" :foreground "dark orange" :weight bold :height 1.3))))
 
-'(outline-1 ((t (:background "#333333" :foreground "white" :height 1.7 :weight extra-bold :box (:line-width (10 . 10) :color "#333333")))))
-'(outline-2 ((t (:background "#f3f3f3" :foreground "#222222" :height 1.5 :weight bold :box (:line-width (10 . 10) :color "#f3f3f3")))))
-'(outline-3 ((t (:background "#f3f3f3" :foreground "#444444" :height 1.2 :weight semi-bold :box (:line-width (6 . 6) :color "#f3f3f3")))))
-'(outline-4 ((t (:background "#f3f3f3" :foreground "#555555" :height 1.05 :weight semi-bold :box (:line-width (3 . 3) :color "#f3f3f3")))))
-'(outline-5 ((t (:background "#f3f3f3" :foreground "#666666" :height 1.0 :weight semi-bold :box (:line-width (2 . 2) :color "#f3f3f3")))))
+'(outline-1 ((t (:background "#d9a032" :foreground "white" :height 1.7 :weight extra-bold :box (:line-width (10 . 10) :color "#f1f1f8")))))
+'(outline-2 ((t (:background "#f1f1f8" :foreground "#222222" :height 1.5 :weight bold :box (:line-width (10 . 10) :color "#f1f1f8")))))
+'(outline-3 ((t (:background "#f1f1f8" :foreground "#444444" :height 1.2 :weight semi-bold :box (:line-width (6 . 6) :color "#f1f1f8")))))
+'(outline-4 ((t (:background "#f1f1f8" :foreground "#555555" :height 1.05 :weight semi-bold :box (:line-width (3 . 3) :color "#f1f1f8")))))
+'(outline-5 ((t (:background "#f1f1f8" :foreground "#666666" :height 1.0 :weight semi-bold :box (:line-width (2 . 2) :color "#f1f1f8")))))
 
 '(markdown-header-face-1 ((t (:inherit 'org-document-title))))
 '(markdown-header-face-2 ((t (:inherit 'outline-1))))
@@ -76,16 +80,16 @@
 '(org-document-title ((t (:background "#333333" :foreground "white" :height 2.0 :weight semi-bold))))
 '(org-document-info-keyword  ((t (:background "#7db7db" :foreground "#ffffff" :height 0.8 :weight semi-light))))
 
-'(org-block-begin-line  ((t (:background "#fbeddb" :foreground "#bd480f" :weight semi-light :height 0.8 :box (:line-width (1 . 7) :color "#fbeddb")))))
+'(org-block-begin-line  ((t (:background "#faf4dd" :foreground "#c7b46e" :weight semi-light :height 0.8 :box (:line-width (1 . 7) :color "#faf4dd")))))
 
-'(org-block ((t (:background "#fbeddb" :foreground "#444444"))))
+'(org-block ((t (:background "#faf4dd" :foreground "#52432a"))))
 '(org-block-end-line  ((t (:inherit 'org-block-begin-line))))
 
-'(org-verbatim ((t (:background "#fbeddb" :foreground "chartreuse4" :weight semi-light))))
+'(org-verbatim ((t (:inherit cyanide-prog-face))))
 '(org-link ((t (:foreground "midnight blue" :background "alice blue" :underline (:color "gray" :style dashes)))))
 '(org-tag  ((t (:foreground "#86755e" :weight semi-light :height 0.8))))
-'(org-drawer  ((t (:background "#f3f3f3" :foreground "#727272" :weight semi-light :height 0.7))))
-'(org-table  ((t (:background "#f3f3f3" :foreground "Purple3" :weight semi-light :height 0.9))))
+'(org-drawer  ((t (:background "#f1f1f8" :foreground "#727272" :weight semi-light :height 0.7))))
+'(org-table  ((t (:background "#f1f1f8" :foreground "Purple3" :weight semi-light :height 0.9))))
 '(org-date  ((t (:background "white" :foreground "dark olive green" :height 0.9 :underline (:color "gray" :style dashes)))))  
 '(org-ellipsis  ((t (:background "#7db7db" :foreground "#ffffff" :height 0.7))))
 
@@ -95,7 +99,7 @@
 '(org-level-4 ((t (:inherit 'outline-4))))
 '(org-level-5 ((t (:inherit 'outline-5))))
 
-'(org-headline-done ((t (:foreground "dark green" :background "#f3f3f3"))))
+'(org-headline-done ((t (:foreground "dark green" :background "#f1f1f8"))))
 '(org-headline-todo ((t (:foreground "brown"))))
 
 '(org-warning ((t (:foreground "white" :background "#C00000" :weight semi-bold))))
@@ -177,6 +181,13 @@
 '(speedbar-tag-face ((t (:foreground "brown"))))
 
 ) ; closing the parenthesis opened in the preamble
+
+
+(defun my/prog-mode-colors ()
+(face-remap-add-relative 'default 'cyanide-prog-face)
+(face-remap-add-relative 'fringe 'cyanide-prog-face))
+
+(add-hook 'prog-mode-hook #'my/prog-mode-colors)
 
 (font-lock-add-keywords
  'python-mode

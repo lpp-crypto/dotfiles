@@ -816,7 +816,7 @@ Setup projectile
   :ensure t
 
   :custom
-  (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~"))
+  (projectile-globally-ignored-file-suffixes '("out" "pdf" "o" "aux" "pyc" "~" "bbl" "blg" "#"))
   (projectile-project-types nil)
   (projectile-completion-system 'auto)
   (projectile-require-project-root t)
@@ -842,8 +842,6 @@ Setup projectile
 
 #+BEGIN_SRC elisp
 (load-file "~/dotfiles/emacs/meuporg.el")
-                                        ;(print org-num-face)
-                                        ;(print cyanide-num-face)
 #+END_SRC
 ** Org export
 The default style when exporting org to LATEX is very ugly; the following makes it better by removing ugly boxes and ensuring that the table of content does not interfere with the remainder of the content.
@@ -863,7 +861,16 @@ The default style when exporting org to LATEX is very ugly; the following makes 
 (setopt org-latex-toc-command "\\tableofcontents \\newpage
 
 ")
+
+(setopt org-latex-pdf-process
+        '("%latex %f"
+          "%latex %f"
+          "%latex %f"))
+
 #+END_SRC
+("%latex -interaction nonstopmode -output-directory %o %f"
+ "%latex -interaction nonstopmode -output-directory %o %f"
+ "%latex -interaction nonstopmode -output-directory %o %f")
 ** LSP
 Not very convincing, auctex should be all I need.
 

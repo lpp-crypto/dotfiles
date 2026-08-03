@@ -561,6 +561,7 @@ The capture templates are intended to send the notes in the correct folders, and
   (interactive "sPaper title: ")
   (vulpea-visit (vulpea-create title
                                "papers/${timestamp}_${slug}.org"
+                               :head "#+STARTUP: content"
                                :tags '("paper"))))
 
 (defun pi2-6/capture-library(title)
@@ -576,7 +577,7 @@ The capture templates are intended to send the notes in the correct folders, and
   (interactive "sProject title: ")
   (vulpea-visit (vulpea-create title
                                "projects/${timestamp}_${slug}.org"
-                               :head "#+MEUPFOLDER: "
+                               :head "#+STARTUP: overview"
                                :body "* Diary  :noexport:"
                                :tags '("ongoingWork"))))
 
@@ -585,6 +586,7 @@ The capture templates are intended to send the notes in the correct folders, and
   (interactive "sReviewed paper title: ")
   (vulpea-visit (vulpea-create (format "%s (review)" title)
                                "reviews/${timestamp}_${slug}.org"
+                               :head "#+STARTUP: show2levels"
                                :tags '("ongoingWork" "review")
                                :body "- DEADLINE :: \n\n* Files\n** main pdf\n* Diary  :noexport:"
                                )))
@@ -595,6 +597,7 @@ The capture templates are intended to send the notes in the correct folders, and
   (interactive "sExperiment title: ")
   (vulpea-visit (vulpea-create (format "%s" title)
                                "experiments/${timestamp}_${slug}.org"
+                               :head "#+STARTUP: show2levels"
                                :tags '("ongoingWork" "experiment")
                                :body (format "\n- DATE :: [%s]\n\n* Notebook\n#+BEGIN_SRC\n\n#+END_SRC\n\n* Diary  :noexport:" (format-time-string
                                                                                                                                 (car org-timestamp-formats) (current-time))))))
@@ -1220,7 +1223,6 @@ $0
 }
 #+END_SRC
 
-
 ** Jumping within a file
 *** Adding/going back to an anchor
 It is common to do something at a specific point, but to want to
@@ -1251,6 +1253,24 @@ Relevant blog post: https://karthinks.com/software/avy-can-do-anything/
   )
 #+END_SRC
 
+** Spelling
+In order for ispell to work correctly (and thus flyspell), it is necessary that the files in [[~/new-emacs/aspell/]] are pointed to by symbolic links in the home folder that have the same name (except for a '.' at the start to hide them).
+
+#+BEGIN_SRC elisp :tangle yes :results output silent
+(defun pi2-6-start-flyspell-mode(dict)
+  (ispell-change-dictionary dict)
+  (flyspell-mode 1)
+  (flyspell-buffer)
+  (message (format "launched flyspell; language: %s"
+                   ispell-local-dictionary)))
+
+(defun pi2-6-flyspell-mode(b)
+  "Prompts the user for a letter and generates a file of the corresponding type"
+  (interactive "c[e] English   [f] French")
+  (cond ((eq b ?e) (pi2-6-start-flyspell-mode "english"))
+        ((eq b ?f) (pi2-6-start-flyspell-mode "french"))
+        (t (message "unrecognized language"))))
+#+END_SRC
 ** Efficient search
 #+BEGIN_SRC elisp
 (use-package ag
@@ -1496,24 +1516,6 @@ Auctex really simplifies handling LaTeX projects. I take this opportunity to act
   ((LaTeX-mode . TeX-source-correlate-mode)
    (LaTeX-mode . reftex-mode)))
 #+END_SRC
-** Spelling
-In order for ispell to work correctly (and thus flyspell), it is necessary that the files in [[~/new-emacs/aspell/]] are pointed to by symbolic links in the home folder that have the same name (except for a '.' at the start to hide them).
-
-#+BEGIN_SRC elisp :tangle yes :results output silent
-(defun pi2-6-start-flyspell-mode(dict)
-(ispell-change-dictionary dict)
-(flyspell-mode 1)
-(flyspell-buffer)
-(message (format "launched flyspell; language: %s"
-ispell-local-dictionary)))
-
-(defun pi2-6-flyspell-mode(b)
-"Prompts the user for a letter and generates a file of the corresponding type"
-(interactive "c[e] English   [f] French")
-(cond ((eq b ?e) (pi2-6-start-flyspell-mode "english"))
-((eq b ?f) (pi2-6-start-flyspell-mode "french"))
-(t (message "unrecognized language"))))
-
 * Dashboard
 
 #+BEGIN_SRC elisp

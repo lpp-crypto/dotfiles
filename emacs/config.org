@@ -1264,7 +1264,7 @@ Relevant blog post: https://karthinks.com/software/avy-can-do-anything/
 ** Spelling
 In order for ispell to work correctly (and thus flyspell), it is necessary that the files in [[~/new-emacs/aspell/]] are pointed to by symbolic links in the home folder that have the same name (except for a '.' at the start to hide them).
 
-#+BEGIN_SRC elisp :tangle yes :results output silent
+#+BEGIN_SRC elisp
 (defun pi2-6-start-flyspell-mode(dict)
   (ispell-change-dictionary dict)
   (flyspell-mode 1)

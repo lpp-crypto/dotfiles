@@ -1,0 +1,47 @@
+#+TITLE: Kitty Terminal
+#+setupfile: setup.org
+#+PROPERTY: header-args  :tangle ~/.config/kitty/kitty.conf :noweb yes
+
+
+#+BEGIN_SRC sh
+shell /usr/bin/zsh
+
+background_opacity 0.97
+placement_strategy center
+window_padding_width 20
+window_border_width 10
+hide_window_decorations yes
+
+active_border_color #ffffff
+inactive_border_color #c0c0c0
+
+font_family      FiraCode-Retina
+bold_font        FiraCode-SemiBold
+italic_font      Hack-Italic
+bold_italic_font auto
+font_size 12.0
+
+background            #d4ccb9
+foreground            #45363b
+cursor                #45363b
+selection_background  #958b83
+color0                #20111a
+color8                #5e5252
+color1                #bd100d
+color9                #bd100d
+color2                #6e902d   
+color10               #858062
+color3                #e08102
+color11               #e9a448
+color4                #416978
+color12               #416978
+color5                #96522b
+color13               #96522b
+color6                #7f7965
+color14               #7f7965
+color7                #958b83
+color15               #d4ccb9
+selection_foreground  #d4ccb9
+
+#+END_SRC
+

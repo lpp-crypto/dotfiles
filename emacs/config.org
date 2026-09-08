@@ -503,7 +503,18 @@ the rest; the leading character of the rest being dropped."
           org-attach-id-ts-folder-format
           org-attach-id-fallback-folder-format))
 #+END_SRC
- 
+
+Finally, we want to look for in the default download folder rather than in the current directory. This is done by temporarily modifying the variable =default-directory=.
+
+#+BEGIN_SRC elisp 
+(defun pi2-6/org-attach-from-downloads ()
+  "Attach a file to the current heading, starting the prompt in
+~/Downloads/ or in ~/Téléchargements/"
+  (interactive)
+  (let ((default-directory (concat (xdg-user-dir "DOWNLOAD") "/"))
+    (call-interactively #'org-attach-attach))))
+#+END_SRC
+
 ** Org babel
 We need to enable the languages in babel. This is done as follows ([[https://emacs-orgmode.gnu.narkive.com/hmJIUIeQ/o-bug-org-babel-execute-src-block-no-org-babel-execute-function-for-python][source]]).
 #+BEGIN_SRC emacs-lisp
@@ -589,8 +600,10 @@ The capture templates are intended to send the notes in the correct folders, and
                                "reviews/${timestamp}_${slug}.org"
                                :head "#+STARTUP: show2levels"
                                :tags '("ongoingWork" "review")
-                               :body "- DEADLINE :: \n\n* Files\n** main pdf\n* Diary  :noexport:"
-                               )))
+                               :body (format "- DEADLINE :: \n\n* Files\n** PDF: %s\n* Diary  :noexport:\n** [%s] Downloaded\n"
+                                             title
+                                             (format-time-string
+                                              (car org-timestamp-formats) (current-time))))))
 
 
 (defun pi2-6/capture-experiment(title)
@@ -600,8 +613,9 @@ The capture templates are intended to send the notes in the correct folders, and
                                "experiments/${timestamp}_${slug}.org"
                                :head "#+STARTUP: show2levels"
                                :tags '("ongoingWork" "experiment")
-                               :body (format "\n- DATE :: [%s]\n\n* Notebook\n#+BEGIN_SRC\n\n#+END_SRC\n\n* Diary  :noexport:" (format-time-string
-                                                                                                                                (car org-timestamp-formats) (current-time))))))
+                               :body (format "\n- DATE :: [%s]\n\n* Notebook\n#+BEGIN_SRC\n\n#+END_SRC\n\n* Diary  :noexport:"
+                                             (format-time-string
+                                              (car org-timestamp-formats) (current-time))))))
 
 
 (defun pi2-6/finalize-current-note()

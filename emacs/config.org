@@ -517,15 +517,16 @@ the rest; the leading character of the rest being dropped."
           org-attach-id-fallback-folder-format))
 #+END_SRC
 
-Finally, we want to look for in the default download folder rather than in the current directory. This is done by temporarily modifying the variable =default-directory=.
+Finally, we want to look for in the default download folder rather than in the current directory. This is done by temporarily modifying the variable =default-directory=. However, the modificcation needs to stop *before* the attachment is actually performed, otherwise the attaching itself will also be made in the =Downloads= folder.
 
 #+BEGIN_SRC elisp 
 (defun pi2-6/org-attach-from-downloads ()
   "Attach a file to the current heading, starting the prompt in
 ~/Downloads/ or in ~/Téléchargements/"
   (interactive)
-  (let ((default-directory (concat (xdg-user-dir "DOWNLOAD") "/"))
-    (call-interactively #'org-attach-attach))))
+    (let ((file (let ((default-directory (concat (xdg-user-dir "DOWNLOAD") "/")))
+                (read-file-name "Attach file: "))))
+    (org-attach-attach file nil 'mv)))
 #+END_SRC
 
 ** Org babel
@@ -1423,7 +1424,6 @@ Now, the main function sets all the common keybindings that I use (many of which
   (pi2-6-global-set-key (kbd "C-S-o") 'find-file)
   (pi2-6-global-set-key (kbd "C-c C-o") 'pi2-6/open-at-point)
   (pi2-6-global-set-key (kbd "M-\" c") 'pi2-6-copy-link-to-current-file)
-  (pi2-6-global-set-key (kbd "M-\" o") 'pi2-6-open-terminal-in-directory)
   (pi2-6-global-set-key (kbd "M-\" f") 'pi2-6-open-file-browser-in-directory)
   (pi2-6-global-set-key (kbd "M-à") 'pi2-6-open-dired)
 
@@ -1449,6 +1449,8 @@ Now, the main function sets all the common keybindings that I use (many of which
   (pi2-6-global-set-key (kbd "C-! f") 'vulpea-find)
   (pi2-6-global-set-key (kbd "C-! n") 'org-roam-node-insert)
   (pi2-6-global-set-key (kbd "C-! a") 'org-agenda)
+  (pi2-6-global-set-key (kbd "C-! t") 'pi2-6/open-terminal-in-current-directory)
+  (pi2-6-global-set-key (kbd "C-! g") 'pi2-6/org-attach-from-downloads)
   (pi2-6-global-set-key (kbd "C-! !") 'pi2-6/dashboard)
   )
 
@@ -1524,6 +1526,17 @@ None of the python language servers I tried handle =cython=. Neither microsoft's
 
 #+END_SRC
 ** Specific tools
+*** Terminal at point
+A simple function that opens kitty in the directory of the current file.
+#+BEGIN_SRC elisp
+(defun pi2-6/open-terminal-in-current-directory()
+  "Opens kitty in the directory containing the current file"
+  (interactive)
+  (let ((async-shell-command-display-buffer nil))
+    (async-shell-command (format "kitty --directory '%s'" default-directory))))
+#+END_SRC
+
+
 *** dot
 Dot is a language to make graphs (as in, nodes and edges). The following use-package call comes from its [[https://github.com/ppareit/graphviz-dot-mode][documentation]].
 #+BEGIN_SRC elisp

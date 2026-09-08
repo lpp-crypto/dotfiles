@@ -271,12 +271,25 @@ First, we need some functions to display path
 ** Scripts
 In order for this system to work well, the scripts in [[./helper-scripts/]] need to be copied somewhere in the path, execution rights added, and extension removed.
 ** File Handling
-Emacs, by default, asks for confirmation before following symbolic
-links. It is annoying; the following gets rid of this ([[https://emacs.stackexchange.com/questions/41286/follow-symlinked-directories-in-dired][source]]).
+Emacs, by default, asks for confirmation before following symboliclinks. It is annoying; the following gets rid of this ([[https://emacs.stackexchange.com/questions/41286/follow-symlinked-directories-in-dired][source]]). 
 
 #+BEGIN_SRC emacs-lisp 
 (setq find-file-visit-truename t)
 #+END_SRC
+
+Also, I don't want dired to show me a bunch of useless files, but I *do* want its display to look nice. [[https://github.com/purcell/diredfl][diredfl]] fontifies the dired buffer.
+
+#+BEGIN_SRC elisp 
+(require 'dired-x)
+(add-hook 'dired-mode-hook 'dired-omit-mode)
+
+(use-package diredfl
+  :ensure t
+  :config (diredfl-global-mode))
+
+(add-hook 'dired-mode-hook 'dired-hide-details-mode)
+#+END_SRC
+
 * Org
 ** Common settings
 #+BEGIN_SRC elisp
@@ -463,7 +476,7 @@ If we are not in an org-agenda-file, then the =org-open-at-mouse= function is ca
       (if (member "images" (org-get-tags))
           (pi2-6/open-slide-show)
         (org-attach-open))
-    (if (string= major-mode "org-mode")
+    (if (derived-mode-p 'org-mode)
         (condition-case nil 
             (call-interactively 'org-open-at-point)
           (error (find-file-at-point)))
@@ -1293,6 +1306,10 @@ In order for ispell to work correctly (and thus flyspell), it is necessary that 
         ((eq b ?f) (pi2-6-start-flyspell-mode "french"))
         (t (message "unrecognized language"))))
 #+END_SRC
+
+#+RESULTS:
+: pi2-6-flyspell-mode
+
 ** Efficient search
 #+BEGIN_SRC elisp
 (use-package ag
@@ -1641,6 +1658,7 @@ have a deadline."
   (pi2-6/dashboard-header "Deadlines" 1)
   (let ((annotated-proj (mapcar 'pi2-6/dashboard-parse-project-with-deadline
                                 (seq-filter (lambda (x) (and
+                                                         (not (vulpea-meta-get x "FINISHED"))
                                                          (vulpea-meta-get x "DEADLINE")
                                                          (length> (vulpea-meta-get x "DEADLINE") 4)))
                                             (vulpea-db-query-by-tags-every '("ongoingWork"))))))

@@ -5,7 +5,7 @@
   (message (format "launched flyspell; language: %s"
                    ispell-local-dictionary)))
 
-(defun pi2-6-flyspell-mode(b)
+(defun pi2-6-flyspell-mode(p)
   "Prompts the user for a letter and generates a file of the corresponding type"
   (interactive "c[e] English   [f] French")
   (cond ((eq b ?e) (pi2-6-start-flyspell-mode "english"))

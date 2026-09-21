@@ -287,7 +287,7 @@ Also, I don't want dired to show me a bunch of useless files, but I *do* want it
   :ensure t
   :config (diredfl-global-mode))
 
-(add-hook 'dired-mode-hook 'dired-hide-details-mode)
+;(add-hook 'dired-mode-hook 'dired-hide-details-mode)
 #+END_SRC
 
 * Org
@@ -430,17 +430,6 @@ Same thing with =org-tag-faces=, which also needs to be set with =setopt=. It si
           
           ))
 
-#+END_SRC
-
-In order to allow the use off different colors in file vaults, it is possible to specify a local set of colors in the =dir-locals= file by creating a variable called =local-org-tag-faces=. Its content is added to the main =org-tag-faces= by the following snippet which was surprisingly hard to write. Indeed, =dir-locals= variables are only set *after* the major mode is setup. As a consequence, using its content requires the use of a later hook.
-
-#+BEGIN_SRC elisp
-(add-hook
- 'after-change-major-mode-hook
- (lambda ()
-   (if (boundp 'local-org-tag-faces)
-       (setopt org-tag-faces (append org-tag-faces local-org-tag-faces))))
- )
 #+END_SRC
 
 *** Opening image folders

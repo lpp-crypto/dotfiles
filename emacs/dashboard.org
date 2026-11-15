@@ -1,0 +1,6 @@
+#+TITLE: Custom Dashboard
+
+
+* Philosophy
+* Helper Functions
+* Main Dashboard Creation

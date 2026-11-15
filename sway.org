@@ -18,9 +18,10 @@ exec_always mako
 
 #+END_SRC
 
-** Etabli prepare daemon
+** Servers
+*** etabli
 #+BEGIN_SRC sh 
-exec_always <<setup.org:etabli_daemons()>> -p 
+exec_always python ~/workshop/etabliv2/tests/daemon.py 
 #+END_SRC
 
 ** Waybar
@@ -36,7 +37,6 @@ I want clicking on the clock module to bring up a calendar above all windows, th
 #+BEGIN_SRC sh
 for_window [app_id="gnome-calendar"] floating enable
 #+END_SRC
-
 
 ** Networks
 The old reliable nm-applet plays well with waybar, so I just go with that.
@@ -93,7 +93,7 @@ set $right l
 ** Window management
 *** Basics
 #+BEGIN_SRC sh
-bindsym $mod+Return exec <<setup.org:term()>>
+bindsym $mod+Return exec sh ~/dotfiles/scripts/terminal.sh
 
 # Kill focused window
 bindsym $mod+Escape kill
@@ -220,38 +220,54 @@ bindsym $mod+d focus parent
 *** Interacting with workspaces
 The keyboard shortcuts are doubled: the first one corresponds to a regular keyboard, the second to the Voyager. They all correspond to similar positions on the layout that I use.
 #+BEGIN_SRC sh 
-  bindsym $mod+eacute    exec <<setup.org:etabli()>> --next_level
-  bindsym $mod+Next+Ctrl exec <<setup.org:etabli()>> --next_level
-  bindsym $mod+ampersand  exec <<setup.org:etabli()>> --previous_level
-  bindsym $mod+Prior+Ctrl exec <<setup.org:etabli()>> --previous_level
-  bindsym $mod+Tab        exec <<setup.org:etabli()>> --next_workspace_in_level
-  bindsym $mod+o          exec <<setup.org:etabli()>> --next_workspace_in_level
-  bindsym $mod+Ctrl+Right exec <<setup.org:etabli()>> --next_workspace_in_level
-  bindsym $mod+u         exec <<setup.org:etabli()>> --previous_workspace_in_level
-  bindsym $mod+Ctrl+Left exec <<setup.org:etabli()>> --previous_workspace_in_level
-  bindsym $mod+p   exec <<setup.org:etabli()>> --new_workspace_in_level
+bindsym $mod+colon      exec  <<setup.org:etabli_query("switch_to_old_workspace")>>
+bindsym $mod+eacute     exec  <<setup.org:etabli_query("switch_to_next_level_in_output")>>
+bindsym $mod+Next+Ctrl  exec  <<setup.org:etabli_query("switch_to_next_level_in_output")>>
+bindsym $mod+ampersand  exec  <<setup.org:etabli_query("switch_to_previous_level_in_output")>>
+bindsym $mod+Prior+Ctrl exec  <<setup.org:etabli_query("switch_to_previous_level_in_output")>>
+bindsym $mod+Tab        exec <<setup.org:etabli_query("switch_to_next_workspace_in_level")>>
+bindsym $mod+o          exec <<setup.org:etabli_query("switch_to_next_workspace_in_level")>>
+bindsym $mod+Ctrl+Right exec <<setup.org:etabli_query("switch_to_next_workspace_in_level")>>
+bindsym $mod+u          exec <<setup.org:etabli_query("switch_to_previous_workspace_in_level")>>
+bindsym $mod+Ctrl+Left  exec <<setup.org:etabli_query("switch_to_previous_workspace_in_level")>>
+bindsym $mod+p          exec <<setup.org:etabli_query("switch_to_new_workspace_in_level")>>
 #+END_SRC
 
 *** Interacting with workspaces and bringing current window
 These are exactly the same as above (at least for my keyboard layouts), except that the Shift key is also pressed. In this case, the same movements are made and the focused window  is brought along.
 #+BEGIN_SRC sh
-  bindsym $mod+1               exec <<setup.org:etabli()>> --next_level_with_window
-  bindsym $mod+Next+Ctrl+Shift exec <<setup.org:etabli()>> --next_level_with_window
-  bindsym $mod+2                exec <<setup.org:etabli()>> --previous_level_with_window
-  bindsym $mod+Prior+Ctrl+Shift exec <<setup.org:etabli()>> --previous_level_with_window
-  bindsym $mod+Shift+o          exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
-  bindsym $mod+Shift+Tab        exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
-  bindsym $mod+Ctrl+Right+Shift exec <<setup.org:etabli()>> --next_workspace_in_level_with_window
-  bindsym $mod+Shift+u         exec <<setup.org:etabli()>> --previous_workspace_in_level_with_window
-  bindsym $mod+Ctrl+Left+Shift exec <<setup.org:etabli()>> --previous_workspace_in_level_with_window
-  bindsym $mod+Shift+p exec <<setup.org:etabli()>> --new_workspace_in_level_with_window
+  bindsym $mod+1                exec  <<setup.org:etabli_query("bring_to_next_level_in_output")>>
+  bindsym $mod+Next+Ctrl+Shift  exec  <<setup.org:etabli_query("bring_to_next_level_in_output")>>
+  bindsym $mod+2                exec <<setup.org:etabli_query("bring_to_previous_level_in_output")>>
+  bindsym $mod+Prior+Ctrl+Shift exec <<setup.org:etabli_query("bring_to_previous_level_in_output")>>
+  bindsym $mod+Shift+o          exec <<setup.org:etabli_query("bring_to_next_workspace_in_level")>>
+  bindsym $mod+Shift+Tab        exec <<setup.org:etabli_query("bring_to_next_workspace_in_level")>>
+  bindsym $mod+Ctrl+Right+Shift exec <<setup.org:etabli_query("bring_to_next_workspace_in_level")>>
+  bindsym $mod+Shift+u          exec <<setup.org:etabli_query("bring_to_previous_workspace_in_level")>>
+  bindsym $mod+Ctrl+Left+Shift  exec <<setup.org:etabli_query("bring_to_previous_workspace_in_level")>>
+  bindsym $mod+Shift+p          exec <<setup.org:etabli_query("bring_to_new_workspace_in_level")>>
 #+END_SRC
 
 *** Dmenu-based scripts
 #+BEGIN_SRC sh
-bindsym $mod+n exec <<setup.org:etabli_dmenu()>> --rename
-bindsym $mod+twosuperior exec <<setup.org:etabli_dmenu()>> --choose_workspace
-bindsym $mod+Shift+twosuperior exec <<setup.org:etabli_dmenu()>> --choose_workspace_with_window
+bindsym $mod+n exec zsh ~/dotfiles/scripts/etabli-dmenu.zsh rename_current_workspace
+bindsym $mod+twosuperior exec zsh ~/dotfiles/scripts/etabli-dmenu.zsh switch
+bindsym $mod+b exec zsh ~/dotfiles/scripts/etabli-dmenu.zsh switch
+bindsym $mod+Shift+twosuperior exec zsh ~/dotfiles/scripts/etabli-dmenu.zsh bring
+bindsym $mod+Shift+b exec zsh ~/dotfiles/scripts/etabli-dmenu.zsh bring
+#+END_SRC
+
+#+RESULTS:
+
+*** emacs
+
+#+BEGIN_SRC sh
+bindsym $mod+e exec sh ~/dotfiles/scripts/emacs-local.sh
+bindsym $mod+z exec sh ~/dotfiles/scripts/capture.sh
+#+END_SRC
+
+#+BEGIN_SRC sh
+for_window [title="^capture$"] floating enable
 #+END_SRC
 ** Special keys
 *** Screencap
@@ -281,7 +297,7 @@ The following sets the wallpaper and the gap between the windows. The
 wallpaper scaling style must be set; =strech= works with wallpapers that
 are too small for the screen.
 #+BEGIN_SRC sh 
-output * bg ~/dotfiles/figures/boat-night.jpeg stretch
+output * bg ~/dotfiles/figures/aurora-1.jpeg stretch
 gaps inner 6
 #+END_SRC
 
@@ -291,8 +307,10 @@ font pango:Iosevka 12
 
 # border without title bar
 default_border pixel 4
-client.focused <<setup.org:focus-color()>> <<setup.org:focus-color()>> #ffffff #c7bfa4 <<setup.org:focus-color()>>
-client.unfocused #827c67 #c7bfa4 #333333 #827c67 #827c67
+# class  border  background  text  indicator  child_border
+client.focused <<setup.org:focus-color()>> <<setup.org:focus-color()>>  <<setup.org:text-color()>>  #c7bfa4 <<setup.org:focus-color()>>
+client.unfocused <<setup.org:inactive-color()>> <<setup.org:inactive-color()>>  <<setup.org:text-color()>>  #c7bfa4 <<setup.org:inactive-color()>>
+
 
 
 # gtk

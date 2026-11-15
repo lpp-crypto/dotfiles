@@ -9,7 +9,7 @@ We open the configuration section as follows:
 ** Core parameters
 #+NAME: rofi-config
 #+BEGIN_SRC css :noweb yes
-modi: "window,run,drun";
+modes: "window,run,drun,filebrowser";
 matching: "fuzzy";
 terminal: "kitty";
 #+END_SRC
@@ -67,6 +67,27 @@ We write the above content to each file.
   <<rofi-appearance>>
   <<rofi-kbd-moving>>
   <<rofi-kbd-deleting>>
+
+   filebrowser {
+      /** Directory the file browser starts in. */
+      directory: "/home/leo/";
+      /**
+        * Sorting method. Can be set to:
+        *   - "name"
+        *   - "mtime" (modification time)
+        *   - "atime" (access time)
+        *   - "ctime" (change time)
+        */
+      sorting-method: "name";
+      /** Group directories before files. */
+      directories-first: true;
+      /** Show hidden files. */
+      show-hidden: false;
+      /** return 1 on cancel. */
+      cancel-returns-1: true;
+      /** command */
+      command: "echo ";
+   }
   }
 #+END_SRC
 
@@ -76,68 +97,71 @@ Reference: https://man.archlinux.org/man/rofi-theme.5.en
 ** Common part
 #+NAME: rofi-theme-common
 #+BEGIN_SRC css :noweb yes  
-  window {
-      location: north west;
-      width: 1400px;
-      background-color: <<setup.org:background-color()>> ;
-      color: <<setup.org:text-color()>> ;         
-      border: 0px;
-      border-color:  <<setup.org:background-color()>> ;
-      padding: 0.2em;
-      orientation: vertical;
-      fixed-height: false;
-      children: [inputbar, dynamiccontent];      
-  }
+window {
+    location: north west;
+    width: 600px;
+    background-color: <<setup.org:background-color()>> ;
+    color: <<setup.org:text-color()>> ;         
+    border: 0px;
+    border-color:  <<setup.org:background-color()>> ;
+    padding: 0.2em;
+    orientation: vertical;
+    fixed-height: false;
+    children: [inputbar, dynamiccontent];      
+}
 
-  inputbar {
-      orientation: horizontal;
-      fixed-height: false;
-      children: [prompt, entry];
-  }
+inputbar {
+    orientation: horizontal;
+    fixed-height: false;
+    children: [prompt, entry];
+}
 
-  prompt {
-      text-color: <<setup.org:ontop-color()>> ;
-      border: 0px;
-      padding: 0.3em 1.3em 0.3em 0em;
-      fixed-height: false;
-  }
+prompt {
+    text-color: <<setup.org:ontop-color()>> ;
+    border: 0px;
+    padding: 0.3em 1.3em 0.3em 0em;
+    fixed-height: false;
+}
 
-  mainbox {
-      background-color: <<setup.org:background-color()>> ;
-      fixed-height: false;
-  }
+mainbox {
+    background-color: <<setup.org:background-color()>> ;
+    fixed-height: false;
+}
 
-  entry {
-      text-color: <<setup.org:focus-color()>> ;
-      padding: 0.3em 0.3em 0.3em 0em;
-      cursor-width: 0.3em;
-      cursor-color: <<setup.org:focus-color()>>;
-      blink: true;
-      text-color: <<setup.org:text-color()>>;
-      background-color: <<setup.org:background-color()>>;
-      dynamic: true;
-      expand: false;
-      fixed-height: false;
-  }
+entry {
+    text-color: <<setup.org:focus-color()>> ;
+    padding: 0.3em 0.3em 0.3em 0em;
+    cursor-width: 0.3em;
+    cursor-color: <<setup.org:focus-color()>>;
+    blink: true;
+    text-color: <<setup.org:text-color()>>;
+    background-color: <<setup.org:background-color()>>;
+    dynamic: true;
+    expand: true;
+    fixed-height: false;
+}
 
-  element {
-      padding: 0.2em 0.2em 0.2em 0.2em;
-  }
+element {
+    padding: 0.2em 0.2em 0.2em 0.2em;
+}
 
-  element selected.normal {
-      background-color: <<setup.org:focus-color()>> ;
-      text-color: <<setup.org:background-color()>> ;
-  }
+element selected.normal {
+    background-color: <<setup.org:background-color()>> ;
+    text-color: <<setup.org:focus-color()>> ;
+    border-width: 0px 0px 1px 1px;
+    border: 2px solid ;
+    border-color: <<setup.org:focus-color()>>;
+}
 
-  element normal.normal {
-      background-color: <<setup.org:text-color()>> ;
-      text-color: <<setup.org:background-color()>> ;
-  }
+element normal.normal {
+    background-color: <<setup.org:background-color()>> ;
+    text-color: <<setup.org:text-color()>> ;
+}
 
-  element alternate.normal {
-      background-color: #DEDEDE ;
-      text-color: <<setup.org:background-color()>> ;
-  }
+element alternate.normal {
+    background-color: <<setup.org:background-color()>> ;
+    text-color: <<setup.org:text-color()>> ;
+}
 #+END_SRC
 
 ** drun
@@ -147,14 +171,14 @@ Reference: https://man.archlinux.org/man/rofi-theme.5.en
   <<rofi-theme-common>>
 
   dynamiccontent {
-      orientation: horizontal;
+      orientation: vertical;
       fixed-height: false;
       children: [listview];
   }
 
   listview {
       fixed-height: false;
-      layout: horizontal;
+      layout: vertical;
       spacing: 4px;
   }
 #+END_SRC
@@ -173,15 +197,13 @@ The number of lines must be even or else the colors form a checkboard pattern in
   }
 
   listview {
-      columns: 6;
-      lines: 3;
+      columns: 1;
       fixed-height: false;
       layout: vertical;
-      flow: horizontal;
+      flow: vertical;
       spacing: 4px;
   }
 #+END_SRC
-
 
 ** transient
 The number of lines must be even or else the colors form a checkboard pattern instead of rows.
@@ -207,4 +229,24 @@ The number of lines must be even or else the colors form a checkboard pattern in
   }
 #+END_SRC
 
+** Directory selection
+The number of lines must be even or else the colors form a checkboard pattern instead of rows.
 
+#+BEGIN_SRC css :tangle ~/.config/rofi/dir-select.rasi :results output silent :noweb yes
+  <<rofi-setup>>
+
+  <<rofi-theme-common>>
+
+  dynamiccontent {
+      orientation: vertical;
+      children: [listview];
+  }
+
+  listview {
+      columns: 1;
+      fixed-height: false;
+      layout: vertical;
+      flow: vertical;
+      spacing: 4px;
+  }
+#+END_SRC

@@ -1,13 +1,30 @@
-#!/usr/bin/sh
+#!/usr/bin/zsh
 
-TARGET_DIR=$(~/dotfiles/pi26venv/bin/etabli_board -n dir -q)
+# capturing
+TMP=$(uuidgen)
+grim  -g "$(slurp)" "$TMP"
+
+# finding where to put the result
+TARGET_DIR=$(echo "get_variable dir" | nc -U /tmp/etabli.sock -N)
 if [[ "$TARGET_DIR" == "" ]]; then
     TARGET_DIR=$(xdg-user-dir PICTURES)
 fi
-FILE_NAME=$TARGET_DIR/$(uuidgen).png
-grim  -g "$(slurp)" "$FILE_NAME"
-if [[ -f $FILE_NAME ]]; then
-    notify-send "$FILE_NAME has been created"
+
+FILE_NAME=$(rofi -dmenu -config ~/.config/rofi/dmenu.rasi -markup-rows -no-show-icons -i -format p -p "Enter image name"-filter)
+if [[ "$FILE_NAME" == "" ]]; then
+    FILE_NAME="img"
+fi
+
+FULL_NAME=$TARGET_DIR$FILE_NAME.png
+if [[ -f "$FULL_NAME" ]]; then
+    FULL_NAME=$TARGET_DIR$FILE_NAME-$TMP.png
+fi
+
+# moving the image and telling the user about it
+mv $TMP $FULL_NAME
+if [[ -f "$FULL_NAME" ]]; then
+    echo "$FULL_NAME has been created"
+    notify-send "$FULL_NAME has been created"
 else
     echo "capture cancelled"
 fi

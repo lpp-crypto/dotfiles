@@ -71,21 +71,46 @@ echo $CURRENT_VOLUME
 notify-send "Sound: $CURRENT_VOLUME" -t 1000
 #+END_SRC
 
-* Screenshots
-=grim= is used to the screenshot itself; =slurp= is used to select only a subset of the visible output(s) (which =grim= then captures). =etabli=, and in particular its =level variables=, can used to suggest a potential path to store the result.
-
-
-#+BEGIN_SRC sh :tangle ~/dotfiles/scripts/screencap :results output silent :noweb yes
+* Etabli-dependent functions
+** Terminal open
+#+BEGIN_SRC sh :tangle ~/dotfiles/scripts/terminal.sh :results output silent :noweb yes
 #!/usr/bin/sh
 
-TARGET_DIR=$(<<setup.org:etabli_board()>> -n dir -q)
+kitty $(echo "get_variable dir" | nc -U /tmp/etabli.sock -N)
+#+END_SRC
+** Screenshots
+=grim= is used to the screenshot itself; =slurp= is used to select only a subset of the visible output(s) (which =grim= then captures). =etabli=, and in particular its =level variables=, can used to suggest a potential path to store the result.
+
+Some care must be taken to avoid erasing an image with the same name if it exists.
+
+#+BEGIN_SRC zsh :tangle ~/dotfiles/scripts/screencap :results output silent :noweb yes
+#!/usr/bin/zsh
+
+# capturing
+TMP=$(uuidgen)
+grim  -g "$(slurp)" "$TMP"
+
+# finding where to put the result
+TARGET_DIR=$(echo "get_variable dir" | nc -U /tmp/etabli.sock -N)
 if [[ "$TARGET_DIR" == "" ]]; then
     TARGET_DIR=$(xdg-user-dir PICTURES)
 fi
-FILE_NAME=$TARGET_DIR/$(uuidgen).png
-grim  -g "$(slurp)" "$FILE_NAME"
-if [[ -f $FILE_NAME ]]; then
-    notify-send "$FILE_NAME has been created"
+
+FILE_NAME=$(rofi -dmenu -config ~/.config/rofi/dmenu.rasi -markup-rows -no-show-icons -i -format p -p "Enter image name"-filter)
+if [[ "$FILE_NAME" == "" ]]; then
+    FILE_NAME="img"
+fi
+
+FULL_NAME=$TARGET_DIR$FILE_NAME.png
+if [[ -f "$FULL_NAME" ]]; then
+    FULL_NAME=$TARGET_DIR$FILE_NAME-$TMP.png
+fi
+
+# moving the image and telling the user about it
+mv $TMP $FULL_NAME
+if [[ -f "$FULL_NAME" ]]; then
+    echo "$FULL_NAME has been created"
+    notify-send "$FULL_NAME has been created"
 else
     echo "capture cancelled"
 fi
@@ -115,6 +140,51 @@ else
     ~/new-emacs/latest/install/bin/emacs-31.0.50 $@
 fi
 #+END_SRC
+
+
+#+BEGIN_SRC sh :tangle ~/dotfiles/scripts/emacs-local.sh :results output silent
+#!/usr/bin/sh
+
+dir=$(echo "get_variable dir" | nc -U /tmp/etabli.sock -N)
+if [ ! $dir ]; then
+    dir="~"
+fi
+
+server=$(echo "get_variable emacs-server" | nc -U /tmp/etabli.sock -N)
+if [ $server ]; then
+    if [ $# -ge 1 ]; then
+        emacsclient -socket-name="$server" -c $@
+    else
+        emacsclient -socket-name="$server" -c "$dir" 
+    fi
+else
+    level=$(echo "current_level" | nc -U /tmp/etabli.sock -N)
+    notify-send "starting emacs server $level" -t 3000
+    emacs --daemon="$level"
+    echo "set_variable emacs-server $level" | nc -U /tmp/etabli.sock -N
+    emacsclient -socket-name=$level -c
+fi
+#+END_SRC
+
+
+#+BEGIN_SRC sh :tangle ~/dotfiles/scripts/capture.sh :results output silent
+#!/usr/bin/sh
+
+server=$(echo "get_variable emacs-server" | nc -U /tmp/etabli.sock -N)
+dir=$(echo "get_variable dir" | nc -U /tmp/etabli.sock -N)
+if [ ! $dir ]; then
+    dir="~"
+fi
+file=$dir/meup.org
+
+if [ $server ]; then 
+    emacsclient -socket-name="$server" -c  -F '((title . "capture"))' "$file"
+else
+    notify-send "you need to start an emacs server!" -t 2000
+fi
+#+END_SRC
+
+
 * Sage
 [[https://www.sagemath.org/][Sage]] is installed using a conda container, meaning that the container needs to be opened before sage can be run. The following scripts
 
@@ -174,7 +244,6 @@ fi
   env python3 $@
 #+END_SRC
 * Window management
-
 ** Layout switch script
 #+BEGIN_SRC python :tangle ~/dotfiles/scripts/split-layout.py :results output 
 from i3ipc import Connection, Event

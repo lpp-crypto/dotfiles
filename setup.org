@@ -38,71 +38,102 @@ return "kitty"
 
 ** Etabli
 *** Executables
-#+NAME: etabli-dir
-#+BEGIN_SRC python
-~/dotfiles/pi26venv/bin
-#+END_SRC
 
 #+NAME: etabli
-#+BEGIN_SRC python
-return "<<etabli-dir>>/etabli"
+#+BEGIN_SRC python :var query=""
+return "etabli"
+#+END_SRC
+
+#+NAME: etabli_waybar
+#+BEGIN_SRC python :var query=""
+return "etabli_waybar"
 #+END_SRC
 
 #+NAME: etabli_dmenu
-#+BEGIN_SRC python
-return "<<etabli-dir>>/etabli_dmenu"
+#+BEGIN_SRC python :var query=""
+return "zsh ~/dotfiles/scripts/etabli-dmenu.zsh"
 #+END_SRC
 
-#+NAME: etabli_daemons
-#+BEGIN_SRC python
-return "<<etabli-dir>>/etabli_daemons"
-#+END_SRC
-
-#+NAME: etabli_board
-#+BEGIN_SRC python
-return "<<etabli-dir>>/etabli_board"
-#+END_SRC
-
-#+NAME: etabli_theme
-#+BEGIN_SRC python
-return "<<etabli-dir>>/etabli_theme_generator"
+#+NAME: etabli_query
+#+BEGIN_SRC python :var query=""
+return "echo '{}' | nc -U /tmp/etabli.sock -N".format(query)
 #+END_SRC
 ** Theme
-#+NAME: background-color
-#+BEGIN_SRC sh :results output
-echo -n "#332b1e"
+#+NAME: full-theme
+#+BEGIN_SRC python 
+theme = {
+    "background": "#332b1e",
+    "text": "#BBBBBB",
+    "focus": "#d9a032",
+    "ontop": "#4682b4",
+    "inactive": "#707070"
+}
 #+END_SRC
+*** sub-variables
+#+NAME: background-color
+#+BEGIN_SRC python :results output :noweb yes
+<<full-theme>>
+print(theme["background"], end="")
+#+END_SRC
+
+#+RESULTS: background-color
 
 #+NAME: text-color
-#+BEGIN_SRC sh :results output
-echo -n "#BBBBBB"
+#+BEGIN_SRC python :results output :noweb yes
+<<full-theme>>
+print(theme["text"], end="")
 #+END_SRC
 
+#+RESULTS: text-color
+: #BBBBBB
+
 #+NAME: focus-color
-#+BEGIN_SRC sh :results output
-echo -n "#d9a032"
+#+BEGIN_SRC python :results output
+<<full-theme>>
+print(theme["focus"], end="")
 #+END_SRC
 
 #+NAME: ontop-color
-#+BEGIN_SRC sh :results output
-echo -n "#4682b4"
+#+BEGIN_SRC python :results output
+<<full-theme>>
+print(theme["ontop"], end="")
 #+END_SRC
 
 #+NAME: inactive-color
-#+BEGIN_SRC sh :results output
-echo -n "#707070"
+#+BEGIN_SRC python :results output
+<<full-theme>>
+print(theme["inactive"], end="")
 #+END_SRC
-
+*** main command
 #+NAME: theme
 #+BEGIN_SRC sh :results output raw :var to_print="--etabli"
-<<setup.org:etabli_theme()>> \
+python ~/dotfiles/scripts/theme_generator.py \
     --background   "<<background-color()>>" \
     --focus        "<<focus-color()>>" \
     --ontop        "<<ontop-color()>>" \
-    --active       "<<text-color()>>" \
-    --inactive     "<<inactive-color()>>" \
+    --text         "<<text-color()>>" \
+    --dimmed       "<<inactive-color()>>" \
     --symbol_open  " ("      \
     --symbol_close ") "      \
     $to_print
 #+END_SRC
 
+
+#+BEGIN_SRC python :noweb yes
+print("""<<theme()>>""")
+#+END_SRC
+
+#+RESULTS:
+: None
+** Theme archive
+*** blue/gold
+#+BEGIN_SRC python 
+theme = {
+    "background": "#332b1e",
+    "text": "#BBBBBB",
+    "focus": "#d9a032",
+    "ontop": "#4682b4",
+    "inactive": "#707070"
+}
+
+#+END_SRC

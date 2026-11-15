@@ -64,9 +64,9 @@
 '(cyanide-class-name-face ((t (:background "white" :foreground "dark orange" :weight bold :height 1.3))))
 
 '(outline-1 ((t (:background "#d9a032" :foreground "white" :height 1.7 :weight extra-bold :box (:line-width (10 . 10) :color "#f1f1f8")))))
-'(outline-2 ((t (:background "#f1f1f8" :foreground "#222222" :height 1.5 :weight bold :box (:line-width (10 . 10) :color "#f1f1f8")))))
-'(outline-3 ((t (:background "#f1f1f8" :foreground "#444444" :height 1.2 :weight semi-bold :box (:line-width (6 . 6) :color "#f1f1f8")))))
-'(outline-4 ((t (:background "#f1f1f8" :foreground "#555555" :height 1.05 :weight semi-bold :box (:line-width (3 . 3) :color "#f1f1f8")))))
+'(outline-2 ((t (:background "#f1f1f8" :foreground "#222238" :height 1.5 :weight bold :box (:line-width (10 . 10) :color "#f1f1f8")))))
+'(outline-3 ((t (:background "#f1f1f8" :foreground "#445844" :height 1.2 :weight semi-bold :box (:line-width (6 . 6) :color "#f1f1f8")))))
+'(outline-4 ((t (:background "#f1f1f8" :foreground "#685555" :height 1.05 :weight semi-bold :box (:line-width (3 . 3) :color "#f1f1f8")))))
 '(outline-5 ((t (:background "#f1f1f8" :foreground "#666666" :height 1.0 :weight semi-bold :box (:line-width (2 . 2) :color "#f1f1f8")))))
 
 '(markdown-header-face-1 ((t (:inherit 'org-document-title))))

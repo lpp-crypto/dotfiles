@@ -84,17 +84,19 @@ for_window [app_id="gnome-calendar"] floating enable
 #+END_SRC
 
 *** Etabli
-#+BEGIN_SRC json :tangle ~/.config/waybar/config
+  "exec": "<<setup.org:etabli_daemons()>> -wo '1'",
+
+  #+BEGIN_SRC json :tangle ~/.config/waybar/config
 "custom/etabli": {
   "format": " {}",
-  "exec": "<<setup.org:etabli_daemons()>> -wo '1'",
   "restart-interval": 1,
+  "exec": "<<setup.org:etabli_waybar()>> 1", 
   "return-type": "json",
-  "on-click": "<<setup.org:etabli()>> --previous_workspace_in_level",
-  "on-click-right": "<<setup.org:etabli()>> --next_workspace_in_level",
-  "on-scroll-up": "<<setup.org:etabli()>> --previous_workspace",
-  "on-scroll-down": "<<setup.org:etabli()>> --next_workspace",
-  "on-click-middle": "<<setup.org:etabli_dmenu()>> --choose_workspace",
+  "on-click":       "<<setup.org:etabli_query("switch_to_previous_workspace_in_level")>>", 
+  "on-click-right": "<<setup.org:etabli_query("switch_to_next_workspace_in_level")>>",
+  "on-scroll-up":   "<<setup.org:etabli_query("switch_to_previous_workspace_in_output")>>",
+  "on-scroll-down": "<<setup.org:etabli_query("switch_to_next_workspace_in_output")>>",
+  "on-click-middle": "<<setup.org:etabli_dmenu()>> switch",
   "smooth-scrolling-threshold": 2.0,
 },
 #+END_SRC
@@ -123,14 +125,14 @@ for_window [app_id="gnome-calendar"] floating enable
 #+BEGIN_SRC json :tangle ~/.config/waybar/config
 "custom/etabli": {
   "format": " {}",
-  "exec": "<<setup.org:etabli_daemons()>> -wo '-1'",
+  "exec": "<<setup.org:etabli_waybar()>> -1",
   "restart-interval": 1,
   "return-type": "json",
-  "on-click": "<<setup.org:etabli()>> --previous_workspace_in_level",
-  "on-click-right": "<<setup.org:etabli()>> --next_workspace_in_level",
-  "on-scroll-up": "<<setup.org:etabli()>> --previous_workspace",
-  "on-scroll-down": "<<setup.org:etabli()>> --next_workspace",
-  "on-click-middle": "<<setup.org:etabli_dmenu()>> --choose_workspace",
+  "on-click":       "<<setup.org:etabli_query("switch_to_previous_workspace_in_level")>>", 
+  "on-click-right": "<<setup.org:etabli_query("switch_to_next_workspace_in_level")>>",
+  "on-scroll-up":   "<<setup.org:etabli_query("switch_to_previous_workspace_in_output")>>",
+  "on-scroll-down": "<<setup.org:etabli_query("switch_to_next_workspace_in_output")>>",
+  "on-click-middle": "<<setup.org:etabli_dmenu()>> switch",
   "smooth-scrolling-threshold": 2.0,
 },
 #+END_SRC
@@ -158,10 +160,11 @@ The original CSS can be found in =/etc/xdg/waybar/style.css=.
     font-size: 18px;
 }
 
+
+
 window#waybar {
     background-color: <<setup.org:background-color()>>;
-    /* border-bottom: 3px solid rgba(100, 114, 125, 0.5);  */
-    color: #BBBBBB;
+    color: <<setup.org:text-color()>>;
     margin: 0px;
     transition-property: background-color;
     transition-duration: .5s;

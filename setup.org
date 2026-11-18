@@ -41,12 +41,12 @@ return "kitty"
 
 #+NAME: etabli
 #+BEGIN_SRC python :var query=""
-return "etabli"
+return "~/dotfiles/pi26venv/bin/etabli"
 #+END_SRC
 
 #+NAME: etabli_waybar
 #+BEGIN_SRC python :var query=""
-return "etabli_waybar"
+return "~/dotfiles/pi26venv/bin/etabli_waybar"
 #+END_SRC
 
 #+NAME: etabli_dmenu
